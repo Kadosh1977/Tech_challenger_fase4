@@ -347,18 +347,20 @@ if historical_data is not None:
     ))
     
     # Configuração dos Eixos Duplos (Interatividade do Plotly)
+    # CÓDIGO CORRIGIDO (Versão 1 - Simplificada):
+
     fig_prob.update_layout(
         title='Preço vs. Probabilidade de Subida (Últimos 30 Dias)',
+        # Simplificando a configuração dos eixos
         yaxis=dict(title='Preço de Fechamento (R$)', titlefont=dict(color='#0077b6')),
         yaxis2=dict(
             title='Probabilidade (0 a 1)',
             titlefont=dict(color='#ff6700'),
             overlaying='y',
-            side='right',
-            range=[0.4, 0.7] # Ajuste o range para o valor que seu modelo costuma operar
-        ),
-        legend=dict(x=0.01, y=0.99),
-        template='plotly_white'
+            side='right'
+            ),
+        legend=dict(x=0.01, y=0.99)
+        
     )
 
     st.plotly_chart(fig_prob, use_container_width=True)
