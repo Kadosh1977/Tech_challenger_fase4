@@ -1,0 +1,8 @@
+streamlit
+catboost
+imbalanced-learn
+scikit-learn
+pandas
+numpy
+joblib
+scipy
