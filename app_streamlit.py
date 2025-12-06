@@ -286,83 +286,65 @@ if historical_data is not None:
     
     st.markdown("---")
 
-# --- ADIÇÃO 2: GRÁFICO DE CONTEXTO DE PROBABILIDADE DE SUBIDA (Últimos 30 dias) ---
+# --- ADIÇÃO 2 (REVISADA): GRÁFICO DE TENDÊNCIA DA PROBABILIDADE ---
 
 if historical_data is not None:
     st.subheader("Contexto: Probabilidade de Subida (Últimos 30 dias)")
-    st.caption("Recalculando a probabilidade de subida para os últimos dias de histórico para contextualização.")
+    st.caption("Tendência da Probabilidade de Subida (Target=1) calculada pelo modelo nos últimos dias de pregão.")
 
+    # A Lógica de Cálculo de df_plot Permanece:
+    # ------------------------------------------------------------------------------------------------
     # 1. Preparar os dados para a predição histórica
     df_contexto = historical_data.head(len(historical_data) - 1).copy()
-    
-    # O CatBoost precisa que features sejam criadas para CADA LINHA do histórico.
-    # A maneira mais fácil e segura é criar uma função para prever a probabilidade de cada dia no histórico.
     
     def predict_context_proba(data_window, model, scaler):
         """Roda a feature engineering e predict_proba para o último dia de 'data_window'."""
         X_pred_contexto = criar_features_para_predicao(data_window, scaler)
-        
-        # Certifique-se de que a coluna categórica é tratada corretamente aqui
         pool_contexto = Pool(data=X_pred_contexto, cat_features=X_pred_contexto.select_dtypes(include=['category']).columns.tolist())
-        
         return model.predict_proba(pool_contexto)[0, 1]
 
-    # 2. Calcular a probabilidade para cada dia no histórico (exceto os dias iniciais que não permitem lags)
-    # Roda a predição em janelas móveis
-    dias_para_plotar = 30 # Plotamos os últimos 30 dias de histórico
-    
-    # O loop começa onde o cálculo de features se estabiliza (ex: depois dos 60 dias do return_2m)
+    dias_para_plotar = 30 
     start_index = len(historical_data) - dias_para_plotar - 1 
     
-    # Criar DataFrame para a probabilidade
     df_prob = pd.DataFrame(index=historical_data.index[-dias_para_plotar:])
     df_prob['Probabilidade_Subida'] = np.nan
     
-    # Itera sobre os últimos 30 dias para prever o dia seguinte a cada um
     for i in range(len(df_prob)):
-        # Cria uma janela de dados até o dia atual + 1 para prever o dia seguinte
         janela = historical_data.iloc[:start_index + i + 1].copy()
-        
-        # A previsão é sempre feita para o último dia da janela
         prob_i = predict_context_proba(janela.rename(columns={'close': 'Último', 'open': 'Abertura', 'high': 'Máxima', 'low': 'Mínima', 'volume': 'Vol.', 'var_pct': 'Var%'}), model, scaler)
         df_prob['Probabilidade_Subida'].iloc[i] = prob_i
 
-    # 3. Combinar com o preço de fechamento para visualização
     df_plot = historical_data.tail(dias_para_plotar).set_index('Data').copy()
     df_plot['Probabilidade_Subida'] = df_prob['Probabilidade_Subida'].values
+    # ------------------------------------------------------------------------------------------------
 
-    # 4. Cria o Gráfico de Linha Dupla
-    fig_prob = go.Figure()
     
-    # Linha do Preço (Eixo Y Esquerdo)
-    fig_prob.add_trace(go.Scatter(
-        x=df_plot.index, y=df_plot['close'], name='Preço Fechamento', 
-        line=dict(color='#0077b6', width=3)
-    ))
+    # --- NOVO BLOCO DE PLOTAGEM (Simplificado com Plotly) ---
     
-    # Linha da Probabilidade (Eixo Y Direito)
-    fig_prob.add_trace(go.Scatter(
-        x=df_plot.index, y=df_plot['Probabilidade_Subida'], name='Probabilidade Subida (Target=1)', 
-        yaxis='y2', line=dict(color='#ff6700', dash='dot', width=2)
-    ))
+    # Garante que não há NaNs na coluna que está sendo plotada
+    df_plot_clean = df_plot.dropna(subset=['Probabilidade_Subida']) 
     
-    # Configuração dos Eixos Duplos (Interatividade do Plotly)
-    # CÓDIGO CORRIGIDO (Versão 1 - Simplificada):
-
-    fig_prob.update_layout(
-        title='Preço vs. Probabilidade de Subida (Últimos 30 Dias)',
-        # Simplificando a configuração dos eixos
-        yaxis=dict(title='Preço de Fechamento (R$)', titlefont=dict(color='#0077b6')),
-        yaxis2=dict(
-            title='Probabilidade (0 a 1)',
-            titlefont=dict(color='#ff6700'),
-            overlaying='y',
-            side='right'
-            ),
-        legend=dict(x=0.01, y=0.99)
-        
+    fig_prob_new = px.line(
+        df_plot_clean.reset_index(), # Plotly se dá melhor com índice ressetado
+        x='Data',
+        y='Probabilidade_Subida',
+        title='Tendência da Probabilidade de Subida (Target=1)',
+        labels={'Probabilidade_Subida': 'Probabilidade (0 a 1)'},
+        template='plotly_white'
+    )
+    
+    # Adiciona uma linha de referência para o Threshold (se o threshold for 0.55)
+    OPTIMIZED_THRESHOLD = 0.55 # Use o seu valor real aqui
+    fig_prob_new.add_hline(
+        y=OPTIMIZED_THRESHOLD, 
+        line_dash="dot", 
+        annotation_text=f"Threshold ({OPTIMIZED_THRESHOLD})", 
+        annotation_position="top right"
     )
 
-    st.plotly_chart(fig_prob, use_container_width=True)
+    # Limita o eixo Y entre 0 e 1, que é o domínio da probabilidade
+    fig_prob_new.update_yaxes(range=[0, 1])
+
+    st.plotly_chart(fig_prob_new, use_container_width=True)
     
     st.markdown("---")
