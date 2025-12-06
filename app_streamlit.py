@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 # *******************************************************************
 # ⚠️ CAMINHO DA BASE DE DADOS LOCAL
-DATA_FILE = r'D:\Alexandre\FIAP\fase 4\techchallenger\Dados Históricos - Ibovespa 20 anos.csv'
+DATA_FILE = 'Dados Históricos - Ibovespa 20 anos.csv'
 # *******************************************************************
 
 # --- FUNÇÕES DE PRÉ-PROCESSAMENTO E FEATURE ENGINEERING (IDÊNTICAS AO TREINO) ---
