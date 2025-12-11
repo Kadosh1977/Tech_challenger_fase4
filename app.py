@@ -228,37 +228,49 @@ st.table(df_targets)
 # Botão: validação 30 dias + predição do próximo pregão
 # ==============================
 if st.button("📊 Realizar Predição"):
-    # Validação últimos 30 dias (usa predict_proba + THRESHOLD)
+
+    # ========================================
+    # 1. VALIDAÇÃO DOS ÚLTIMOS 30 DIAS
+    # ========================================
     proba_test = model.predict_proba(X_test)[:, 1]
     pred_test = (proba_test >= THRESHOLD).astype(int)
     acc = accuracy_score(y_test, pred_test)
 
-    # Predição para o próximo pregão (baseando na última data) -> calcular antes do gráfico
-    prob_next = model.predict_proba(X_last)[0, 1]
-    pred_next = int(prob_next >= THRESHOLD)
-
-    # Apenas acurácia
     st.subheader("✅ Acurácia")
     st.write(f"Acurácia: **{acc:.3f}**")
 
-    # ==============================
-    # GRÁFICO INTERATIVO (histórico + previsão alinhada)
-    # ==============================
+    # ========================================
+    # 2. PREVISÃO DO PRÓXIMO PREGÃO
+    # ========================================
+    prob_next = model.predict_proba(X_last)[0, 1]
+    pred_next = int(prob_next >= THRESHOLD)
+
+    # ========================================
+    # 3. PREPARAR série histórica (precisa vir ANTES do gráfico!)
+    # ========================================
+    historico_plot = y_test.copy()  # garante que existe
+    historico_plot.index = y_test.index  # garante alinhamento
+
+    # Criar data futura para colocar o ponto da previsão
+    proxima_data = ultima_data + pd.Timedelta(days=1)
+
+    # ========================================
+    # 4. GRÁFICO INTERATIVO COMBINA HISTÓRICO + PREVISÃO
+    # ========================================
 
     import plotly.graph_objects as go
 
     st.subheader("📈 Evolução Temporal + Previsão do Modelo")
 
-    # 1) Criar um índice futuro para o próximo pregão
-    proxima_data = ultima_data + pd.Timedelta(days=1)
-
-    # 2) Construir uma série combinada: histórico + previsão
+    # Série do eixo X (datas)
     serie_x = list(historico_plot.index) + [proxima_data]
+
+    # Série do eixo Y (probabilidades)
     serie_y = list(proba_test) + [prob_next]
 
     fig = go.Figure()
 
-    # Linha contínua: últimos pregões + previsão
+    # Linha contínua histórico + previsão
     fig.add_trace(go.Scatter(
         x=serie_x,
         y=serie_y,
@@ -267,7 +279,7 @@ if st.button("📊 Realizar Predição"):
         line=dict(width=2)
     ))
 
-    # Destaque no ponto futuro (previsão)
+    # Destaque da previsão
     fig.add_trace(go.Scatter(
         x=[proxima_data],
         y=[prob_next],
@@ -285,13 +297,11 @@ if st.button("📊 Realizar Predição"):
 
     st.plotly_chart(fig, use_container_width=True)
 
-
-    # Mostrar previsão textual
+    # ========================================
+    # 5. TEXTO DA PREVISÃO
+    # ========================================
     st.subheader("🔮 Tendência para o próximo pregão")
     if pred_next == 1:
         st.success(f"PREVISÃO: Alta (Probabilidade: {prob_next*100:.2f}%) 📈")
     else:
         st.error(f"PREVISÃO: Queda/Estável (Probabilidade: {(1-prob_next)*100:.2f}%) 📉")
-
-    # --- (aqui podem seguir as métricas, matriz de confusão e o log) ---
-
