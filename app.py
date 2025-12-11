@@ -228,46 +228,6 @@ st.table(df_targets)
 # Botão: validação 30 dias + predição do próximo pregão
 # ==============================
 if st.button("📊 Realizar Predição"):
-        # ==============================
-    # GRÁFICO INTERATIVO (histórico + previsão)
-    # ==============================
-
-    import plotly.graph_objects as go
-
-    st.subheader("📈 Evolução Temporal + Previsão do Modelo")
-
-    historico_plot = y_test.copy()
-    historico_plot = historico_plot.replace({1: "Alta", 0: "Baixa"})
-
-    fig = go.Figure()
-
-    # Série real
-    fig.add_trace(go.Scatter(
-        x=historico_plot.index,
-        y=proba_test,
-        mode="lines",
-        name="Probabilidade Real (Histórico)",
-        line=dict(width=2)
-    ))
-
-    # Ponto previsto
-    fig.add_trace(go.Scatter(
-        x=[ultima_data],
-        y=[prob_next],
-        mode="markers",
-        name="Previsão Próximo Pregão",
-        marker=dict(size=12)
-    ))
-
-    fig.update_layout(
-        title="Probabilidade de Alta (Histórico vs Previsão)",
-        xaxis_title="Data",
-        yaxis_title="Probabilidade",
-        height=450
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
     # Validação últimos 30 dias (usa predict_proba + THRESHOLD)
     proba_test = model.predict_proba(X_test)[:, 1]
     pred_test = (proba_test >= THRESHOLD).astype(int)
