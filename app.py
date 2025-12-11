@@ -1,11 +1,16 @@
-# app.py
+# Arquivo app.py revisado
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import plotly.graph_objects as go
 import plotly.express as px
 from catboost import CatBoostClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+import csv
 
 # ==============================
 # Configuração
@@ -16,6 +21,7 @@ st.title("📈 Tendência IBOVESPA - CatBoost")
 CSV_FILE = "Dados Históricos - Ibovespa 20 anos.csv"
 THRESHOLD = 0.49  # ajuste conforme teste final
 TEST_SIZE = 30
+LOG_FILE = "log_previsoes.csv"
 
 # ==============================
 # Artefatos
@@ -40,6 +46,7 @@ def tratar_coluna_volume(coluna_volume: pd.Series) -> pd.Series:
         )
     return pd.to_numeric(coluna_tratada, errors="coerce")
 
+
 def calculate_slope(series: pd.Series, window: int) -> pd.Series:
     slopes = [np.nan] * (window - 1)
     for i in range(window, len(series) + 1):
@@ -53,6 +60,7 @@ def calculate_slope(series: pd.Series, window: int) -> pd.Series:
         slopes.append(slope)
     return pd.Series(slopes, index=series.index)
 
+
 def calcular_rsi(df: pd.DataFrame, periodo: int = 14) -> pd.Series:
     delta = df["close"].diff()
     ganho = delta.where(delta > 0, 0.0)
@@ -64,16 +72,19 @@ def calcular_rsi(df: pd.DataFrame, periodo: int = 14) -> pd.Series:
     rsi = 100.0 - (100.0 / (1.0 + rs))
     return rsi
 
+
 def calcular_obv(df: pd.DataFrame) -> pd.Series:
     direcao = np.sign(df["close"].diff()).fillna(0)
     obv = (direcao * df["volume"]).cumsum()
     return obv
+
 
 def calcular_close_position(df: pd.DataFrame) -> pd.Series:
     faixa = df["high"] - df["low"]
     pos = (df["close"] - df["low"]) / faixa
     pos.loc[faixa == 0] = 0.5
     return pos
+
 
 def categorizar_periodo(dt: pd.Timestamp) -> str:
     if dt.year <= 2009:
@@ -85,12 +96,13 @@ def categorizar_periodo(dt: pd.Timestamp) -> str:
     else:
         return "recente_2023_atual"
 
+
 # ==============================
 # Carregar e preparar dados
 # ==============================
 dados = pd.read_csv(CSV_FILE)
 dados["Data"] = pd.to_datetime(dados["Data"], format="%d.%m.%Y", errors="coerce")
-dados = dados.dropna(subset=["Data"])
+dados = dados.dropna(subset=["Data"]) 
 dados = dados.set_index("Data").sort_index()
 
 dados["Var%"] = dados["Var%"].astype(str).str.replace(",", ".").str.replace("%", "").astype(float)
@@ -105,7 +117,7 @@ dados = dados.rename(columns={
     "Var%": "var_pct"
 })
 
-# Target do próximo pregão
+# Target do próximo pregão (para treino/validação)
 dados["target"] = (dados["var_pct"].shift(-1) > 0).astype(int)
 
 # Log1p e escalonamento com scaler salvo
@@ -211,6 +223,93 @@ X_test = X.iloc[-TEST_SIZE:].copy()
 y_test = y.iloc[-TEST_SIZE:].copy()
 
 # ==============================
+# Função para construir features do próximo pregão corretamente
+# ==============================
+def construir_features_proximo_pregao(dados, features_saved, scaler):
+    # Usa o dataframe 'dados' original (com colunas originais e indicadores já calculados)
+    last = dados.iloc[-1:].copy()
+
+    # criar próxima data = dia útil seguinte aproximado (dia +1)
+    proxima_data = last.index[0] + pd.Timedelta(days=1)
+
+    # construir uma linha nova baseada na última
+    future = last.copy()
+    future.index = [proxima_data]
+
+    # Para features que são lags no X (por exemplo var_pct_lag_1, volume_lag_1...), precisamos preencher
+    # A maneira prática: recriar X_full para future usando as mesmas transformações de lags
+    # Primeiro, concatenar future com dados sem a última linha para cálculo de lags
+    temp = pd.concat([dados, future])
+
+    # Recalcular lags e indicadores para a janela (apenas último índice é necessário)
+    temp["open_lag_1"] = temp["open"].shift(1)
+    temp["high_lag_1"] = temp["high"].shift(1)
+    temp["low_lag_1"] = temp["low"].shift(1)
+    temp["volume_lag_1"] = temp["volume"].shift(1)
+    temp["var_pct_lag_1"] = temp["var_pct"].shift(1)
+    for lag in [5, 10, 15, 20, 30]:
+        temp[f"var_pct_lag_{lag}"] = temp["var_pct"].shift(lag)
+
+    temp["return_1w"] = temp["close"].pct_change(periods=5)
+    temp["return_2m"] = temp["close"].pct_change(periods=60)
+    temp["volume_pct_change"] = temp["volume"].pct_change()
+    temp["close_position"] = calcular_close_position(temp)
+    temp["daily_range"] = temp["high"] - temp["low"]
+    temp["slope_20d"] = calculate_slope(temp["close"], window=20)
+    temp["slope_50d"] = calculate_slope(temp["close"], window=50)
+    temp["rsi"] = calcular_rsi(temp)
+    temp["obv"] = calcular_obv(temp)
+    temp["rsi_lag_1"] = temp["rsi"].shift(1)
+    temp["obv_lag_1"] = temp["obv"].shift(1)
+    temp["close_position_lag_1"] = temp["close_position"].shift(1)
+    temp["volume_pct_change_lag_1"] = temp["volume_pct_change"].shift(1)
+    temp["daily_range_lag_1"] = temp["daily_range"].shift(1)
+    temp["volatility_short"] = temp["daily_range"].rolling(window=5).std()
+    temp["volatility_long"] = temp["daily_range"].rolling(window=30).std()
+    temp["volatility_ratio"] = temp["volatility_short"] / (temp["volatility_long"] + 1e-6)
+    temp["volatility_ratio"] = temp["volatility_ratio"].replace([np.inf, -np.inf], np.nan).bfill()
+    temp["force_index"] = (temp["close"].diff()) * temp["volume"]
+    temp["force_index_2d"] = temp["force_index"].rolling(window=2).mean()
+    temp["force_index_5d"] = temp["force_index"].rolling(window=5).mean()
+    temp["force_index_pct_change"] = temp["force_index"].pct_change()
+    temp["force_index_diff"] = temp["force_index"].diff()
+    temp["periodo"] = temp.index.map(categorizar_period)
+
+    # Agora seleciona a última linha (future) e monta X_future com as mesmas colunas do X
+    future_row = temp.iloc[[-1]].copy()
+
+    # Aplicar log1p e scaler caso necessário (já aplicado no dataset original)
+    # garantir que volume e var_pct existam
+    if "volume" in future_row.columns:
+        # se volume estiver em escala natural, aplicamos log1p como feito antes
+        try:
+            future_row["volume"] = np.log1p(future_row["volume"])
+        except:
+            pass
+
+    # tentar escalar volume e var_pct com o scaler carregado
+    try:
+        cols_to_scale = [c for c in ["volume", "var_pct"] if c in future_row.columns]
+        if len(cols_to_scale) > 0:
+            scaled = scaler.transform(future_row[cols_to_scale])
+            future_row[cols_to_scale] = scaled
+    except Exception:
+        # se scaler falhar, seguimos com os valores atuais
+        pass
+
+    # Construir X_future alinhado às features salvas
+    X_future_full = future_row.drop(columns=[c for c in ["close", "high", "low", "target"] if c in future_row.columns], errors="ignore")
+
+    for col in features_saved:
+        if col not in X_future_full.columns:
+            X_future_full[col] = 0
+
+    X_future = X_future_full[features_saved].copy()
+
+    return X_future
+
+
+# ==============================
 # UI informativa mínima
 # ==============================
 st.subheader("📅 Última data da base")
@@ -225,52 +324,69 @@ df_targets = pd.DataFrame({
 st.table(df_targets)
 
 # ==============================
+# Análises temporais (visuais)
+# ==============================
+st.subheader("📊 Análises Temporais do IBOVESPA")
+dados['MA_20'] = dados['close'].rolling(20).mean()
+dados['MA_50'] = dados['close'].rolling(50).mean()
+
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados['close'][-200:], name="Preço"))
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados['MA_20'][-200:], name="MA 20"))
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados['MA_50'][-200:], name="MA 50"))
+fig2.update_layout(title="Tendência do IBOV — Últimos 200 dias")
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# ==============================
 # Botão: validação 30 dias + predição do próximo pregão
 # ==============================
 if st.button("📊 Realizar Predição"):
-
-    # ========================================
-    # 1. VALIDAÇÃO DOS ÚLTIMOS 30 DIAS
-    # ========================================
+    # Validação últimos 30 dias (usa predict_proba + THRESHOLD)
     proba_test = model.predict_proba(X_test)[:, 1]
     pred_test = (proba_test >= THRESHOLD).astype(int)
     acc = accuracy_score(y_test, pred_test)
 
-    st.subheader("✅ Acurácia")
-    st.write(f"Acurácia: **{acc:.3f}**")
-
-    # ========================================
-    # 2. PREVISÃO DO PRÓXIMO PREGÃO
-    # ========================================
-    prob_next = model.predict_proba(X_last)[0, 1]
+    # Predição correta para o próximo pregão (construindo features futuras)
+    X_future = construir_features_proximo_pregao(dados, features_saved, scaler)
+    prob_next = model.predict_proba(X_future)[0, 1]
     pred_next = int(prob_next >= THRESHOLD)
 
-    # ========================================
-    # 3. PREPARAR série histórica (precisa vir ANTES do gráfico!)
-    # ========================================
-    historico_plot = y_test.copy()  # garante que existe
-    historico_plot.index = y_test.index  # garante alinhamento
+    # Métricas
+    precision = precision_score(y_test, pred_test)
+    recall = recall_score(y_test, pred_test)
 
-    # Criar data futura para colocar o ponto da previsão
-    proxima_data = ultima_data + pd.Timedelta(days=1)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Acurácia", f"{acc:.3f}")
+    col2.metric("Precisão", f"{precision:.3f}")
+    col3.metric("Recall", f"{recall:.3f}")
 
-    # ========================================
-    # 4. GRÁFICO INTERATIVO COMBINA HISTÓRICO + PREVISÃO
-    # ========================================
+    # Matriz de confusão
+    st.subheader("🔍 Matriz de Confusão")
+    cm = confusion_matrix(y_test, pred_test)
+    fig_cm, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+    ax.set_xlabel("Previsto")
+    ax.set_ylabel("Real")
+    st.pyplot(fig_cm)
 
-    import plotly.graph_objects as go
-
+    # ==============================
+    # GRÁFICO INTERATIVO (histórico + previsão alinhada)
+    # ==============================
     st.subheader("📈 Evolução Temporal + Previsão do Modelo")
 
-    # Série do eixo X (datas)
-    serie_x = list(historico_plot.index) + [proxima_data]
+    # garantir histórico de probabilidades alinhado com X_test.index
+    # se X_test foi criado com as mesmas datas que y_test, usamos-as
+    series_x_hist = list(X_test.index)
+    series_y_hist = list(proba_test)
 
-    # Série do eixo Y (probabilidades)
-    serie_y = list(proba_test) + [prob_next]
+    # data do próximo pregão (dia seguinte)
+    proxima_data = ultima_data + pd.Timedelta(days=1)
+
+    serie_x = series_x_hist + [proxima_data]
+    serie_y = series_y_hist + [prob_next]
 
     fig = go.Figure()
-
-    # Linha contínua histórico + previsão
     fig.add_trace(go.Scatter(
         x=serie_x,
         y=serie_y,
@@ -279,7 +395,7 @@ if st.button("📊 Realizar Predição"):
         line=dict(width=2)
     ))
 
-    # Destaque da previsão
+    # destaque pontual
     fig.add_trace(go.Scatter(
         x=[proxima_data],
         y=[prob_next],
@@ -297,11 +413,29 @@ if st.button("📊 Realizar Predição"):
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # ========================================
-    # 5. TEXTO DA PREVISÃO
-    # ========================================
+    # Texto com previsão
     st.subheader("🔮 Tendência para o próximo pregão")
     if pred_next == 1:
         st.success(f"PREVISÃO: Alta (Probabilidade: {prob_next*100:.2f}%) 📈")
     else:
         st.error(f"PREVISÃO: Queda/Estável (Probabilidade: {(1-prob_next)*100:.2f}%) 📉")
+
+    # ==============================
+    # Log de uso (opcional)
+    # ==============================
+    log_entry = {
+        "data_execucao": str(pd.Timestamp.now()),
+        "data_ultimo_pregao": str(ultima_data),
+        "data_previsao": str(proxima_data),
+        "probabilidade_prevista": float(prob_next),
+        "classe_prevista": int(pred_next)
+    }
+
+    file_exists = os.path.isfile(LOG_FILE)
+    with open(LOG_FILE, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=log_entry.keys())
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(log_entry)
+
+    st.info(f"📄 Log salvo em {LOG_FILE}")
