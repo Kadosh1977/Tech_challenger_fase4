@@ -233,33 +233,36 @@ if st.button("📊 Realizar Predição"):
     pred_test = (proba_test >= THRESHOLD).astype(int)
     acc = accuracy_score(y_test, pred_test)
 
+    # Predição para o próximo pregão (baseando na última data) -> calcular antes do gráfico
+    prob_next = model.predict_proba(X_last)[0, 1]
+    pred_next = int(prob_next >= THRESHOLD)
+
     # Apenas acurácia
     st.subheader("✅ Acurácia")
     st.write(f"Acurácia: **{acc:.3f}**")
 
-        # ==============================
+    # ==============================
     # GRÁFICO INTERATIVO (histórico + previsão)
     # ==============================
-
     import plotly.graph_objects as go
 
     st.subheader("📈 Evolução Temporal + Previsão do Modelo")
 
+    # histórico_plot é apenas para pegar o index (datas) do y_test
     historico_plot = y_test.copy()
-    historico_plot = historico_plot.replace({1: "Alta", 0: "Baixa"})
 
     fig = go.Figure()
 
-    # Série real
+    # Série de probabilidades (últimos TEST_SIZE pregões)
     fig.add_trace(go.Scatter(
         x=historico_plot.index,
         y=proba_test,
         mode="lines",
-        name="Probabilidade Real (Histórico)",
+        name="Probabilidade (últimos pregões)",
         line=dict(width=2)
     ))
 
-    # Ponto previsto
+    # Ponto previsto (próximo pregão)
     fig.add_trace(go.Scatter(
         x=[ultima_data],
         y=[prob_next],
@@ -277,13 +280,12 @@ if st.button("📊 Realizar Predição"):
 
     st.plotly_chart(fig, use_container_width=True)
 
-
-    # Predição para o próximo pregão (baseando na última data)
-    prob_next = model.predict_proba(X_last)[0, 1]
-    pred_next = int(prob_next >= THRESHOLD)
-
+    # Mostrar previsão textual
     st.subheader("🔮 Tendência para o próximo pregão")
     if pred_next == 1:
         st.success(f"PREVISÃO: Alta (Probabilidade: {prob_next*100:.2f}%) 📈")
     else:
         st.error(f"PREVISÃO: Queda/Estável (Probabilidade: {(1-prob_next)*100:.2f}%) 📉")
+
+    # --- (aqui podem seguir as métricas, matriz de confusão e o log) ---
+
