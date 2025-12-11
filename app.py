@@ -273,7 +273,7 @@ def construir_features_proximo_pregao(dados, features_saved, scaler):
     temp["force_index_5d"] = temp["force_index"].rolling(window=5).mean()
     temp["force_index_pct_change"] = temp["force_index"].pct_change()
     temp["force_index_diff"] = temp["force_index"].diff()
-    temp["periodo"] = temp.index.map(categorizar_period)
+    temp["periodo"] = temp.index.map(categorizar_periodo)
 
     # Agora seleciona a última linha (future) e monta X_future com as mesmas colunas do X
     future_row = temp.iloc[[-1]].copy()
