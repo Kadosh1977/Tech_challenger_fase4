@@ -242,43 +242,49 @@ if st.button("📊 Realizar Predição"):
     st.write(f"Acurácia: **{acc:.3f}**")
 
     # ==============================
-    # GRÁFICO INTERATIVO (histórico + previsão)
+    # GRÁFICO INTERATIVO (histórico + previsão alinhada)
     # ==============================
+
     import plotly.graph_objects as go
 
     st.subheader("📈 Evolução Temporal + Previsão do Modelo")
 
-    # histórico_plot é apenas para pegar o index (datas) do y_test
-    historico_plot = y_test.copy()
+    # 1) Criar um índice futuro para o próximo pregão
+    proxima_data = ultima_data + pd.Timedelta(days=1)
+
+    # 2) Construir uma série combinada: histórico + previsão
+    serie_x = list(historico_plot.index) + [proxima_data]
+    serie_y = list(proba_test) + [prob_next]
 
     fig = go.Figure()
 
-    # Série de probabilidades (últimos TEST_SIZE pregões)
+    # Linha contínua: últimos pregões + previsão
     fig.add_trace(go.Scatter(
-        x=historico_plot.index,
-        y=proba_test,
-        mode="lines",
-        name="Probabilidade (últimos pregões)",
+        x=serie_x,
+        y=serie_y,
+        mode="lines+markers",
+        name="Probabilidade (Histórico + Previsão)",
         line=dict(width=2)
     ))
 
-    # Ponto previsto (próximo pregão)
+    # Destaque no ponto futuro (previsão)
     fig.add_trace(go.Scatter(
-        x=[ultima_data],
+        x=[proxima_data],
         y=[prob_next],
         mode="markers",
         name="Previsão Próximo Pregão",
-        marker=dict(size=12)
+        marker=dict(size=14, symbol="diamond", line=dict(width=2))
     ))
 
     fig.update_layout(
-        title="Probabilidade de Alta (Histórico vs Previsão)",
+        title="Probabilidade de Alta (Últimos pregões + Próxima previsão)",
         xaxis_title="Data",
         yaxis_title="Probabilidade",
         height=450
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
 
     # Mostrar previsão textual
     st.subheader("🔮 Tendência para o próximo pregão")
