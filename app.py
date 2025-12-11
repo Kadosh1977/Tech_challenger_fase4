@@ -115,7 +115,7 @@ mask_scale = ~dados[["volume", "var_pct"]].isnull().any(axis=1)
 dados.loc[mask_scale, ["volume", "var_pct"]] = scaler.transform(dados.loc[mask_scale, ["volume", "var_pct"]])
 
 # ==============================
-# Engenharia de features (igual ao notebook)
+# Engenharia de features 
 # ==============================
 # Lags básicos
 dados["open_lag_1"] = dados["open"].shift(1)
@@ -174,7 +174,7 @@ dados["periodo"] = dados["periodo"].astype(
     )
 )
 
-# Drop de NaNs (alinha com o treino)
+# Drop de NaNs 
 dados = dados.dropna()
 
 # ==============================
