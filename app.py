@@ -314,6 +314,23 @@ fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados['MA_50'][-200:], name="M
 fig2.update_layout(title="Tendência do IBOV — Últimos 200 dias")
 st.plotly_chart(fig2, use_container_width=True)
 
+st.subheader("📊 Análises Temporais do IBOVESPA")
+
+# Gráfico da variação percentual (últimos 200 dias)
+fig3 = go.Figure()
+fig3.add_trace(
+    go.Scatter(
+        x=dados.index[-200:],
+        y=dados['var_pct'][-200:],
+        name="Variação diária (%)"
+    )
+)
+fig3.update_layout(
+    title="Variação diária do IBOV — Últimos 200 pregões",
+    yaxis_title="Variação (%)"
+)
+st.plotly_chart(fig2, use_container_width=True)
+
 # ==============================
 # Botão: validação TEST_SIZE dias + predição do próximo pregão (com features futuras)
 # ==============================
