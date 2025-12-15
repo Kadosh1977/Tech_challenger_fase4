@@ -327,7 +327,8 @@ fig3.add_trace(
 )
 fig3.update_layout(
     title="Variação diária do IBOV — Últimos 50 pregões",
-    yaxis_title="Variação (%)"
+    yaxis_title="Variação (%)",
+    yaxis=dict(tickformat=".2f")
 )
 st.plotly_chart(fig3, use_container_width=True)
 
