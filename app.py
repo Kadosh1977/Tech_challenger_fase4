@@ -329,7 +329,7 @@ fig3.update_layout(
     title="Variação diária do IBOV — Últimos 200 pregões",
     yaxis_title="Variação (%)"
 )
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True)
 
 # ==============================
 # Botão: validação TEST_SIZE dias + predição do próximo pregão (com features futuras)
