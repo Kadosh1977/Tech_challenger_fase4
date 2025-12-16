@@ -1,4 +1,4 @@
-# app.py
+# app.py (versão final com features futuras)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -32,18 +32,18 @@ features_saved = joblib.load("features_modelo_ibov.joblib")
 # ==============================
 # Funções auxiliares
 # ==============================
-def tratar_coluna_volume(coluna):
-    coluna = coluna.astype(str)
+def tratar_coluna_volume(coluna_volume):
+    coluna_tratada = coluna_volume.astype(str).copy()
     mult = {"k": 1_000, "M": 1_000_000, "B": 1_000_000_000}
-    for s, m in mult.items():
-        mask = coluna.str.contains(s, case=False, na=False)
-        coluna.loc[mask] = (
-            coluna.loc[mask]
-            .str.replace(s, "", case=False)
+    for suf, m in mult.items():
+        mask = coluna_tratada.str.contains(suf, case=False, na=False)
+        coluna_tratada.loc[mask] = (
+            coluna_tratada.loc[mask]
+            .str.replace(suf, "", case=False)
             .str.replace(",", ".")
             .astype(float) * m
         )
-    return pd.to_numeric(coluna, errors="coerce")
+    return pd.to_numeric(coluna_tratada, errors="coerce")
 
 def calculate_slope(series, window):
     slopes = [np.nan] * (window - 1)
@@ -81,7 +81,7 @@ def categorizar_periodo(dt):
         return "recente_2023_atual"
 
 # ==============================
-# Carregar e preparar dados
+# Carregar dados
 # ==============================
 dados = pd.read_csv(CSV_FILE)
 dados["Data"] = pd.to_datetime(dados["Data"], format="%d.%m.%Y", errors="coerce")
@@ -106,7 +106,7 @@ mask = ~dados[["volume", "var_pct"]].isnull().any(axis=1)
 dados.loc[mask, ["volume", "var_pct"]] = scaler.transform(dados.loc[mask, ["volume", "var_pct"]])
 
 # ==============================
-# Engenharia de features
+# Engenharia de features (INALTERADA)
 # ==============================
 dados["open_lag_1"] = dados["open"].shift(1)
 dados["high_lag_1"] = dados["high"].shift(1)
@@ -127,6 +127,7 @@ dados["slope_50d"] = calculate_slope(dados["close"], 50)
 dados["rsi"] = calcular_rsi(dados)
 dados["obv"] = calcular_obv(dados)
 
+dados["periodo"] = dados.index.map(categorizar_periodo)
 dados = dados.dropna()
 
 # ==============================
@@ -140,72 +141,40 @@ X = X[features_saved]
 y = dados["target"]
 
 ultima_data = X.index.max()
+ultima_data_fmt = ultima_data.strftime("%d/%m/%Y")
 
 # ==============================
-# DASHBOARD — KPIs
+# DASHBOARD (APENAS ADICIONADO)
 # ==============================
-st.subheader("📊 Resumo do Dataset")
-k1, k2, k3 = st.columns(3)
-k1.metric("📅 Último Pregão", str(ultima_data.date()))
-k2.metric("📈 Total de Registros", len(dados))
-k3.metric("🎯 Threshold", THRESHOLD)
+st.subheader("📌 Visão Geral")
+
+c1, c2, c3 = st.columns(3)
+c1.metric("📅 Último Pregão", ultima_data_fmt)
+c2.metric("📊 Registros", len(dados))
+c3.metric("🎯 Threshold", THRESHOLD)
 
 # ==============================
-# GRÁFICOS
+# Gráfico de médias móveis (ORIGINAL)
 # ==============================
-st.subheader("📉 Variação Diária — Últimos 50 Pregões")
+st.subheader("📊 Análises Temporais do IBOVESPA")
 
+dados["MA_20"] = dados["close"].rolling(20).mean()
+dados["MA_50"] = dados["close"].rolling(50).mean()
+
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados["close"][-200:], name="Preço"))
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados["MA_20"][-200:], name="MA 20"))
+fig2.add_trace(go.Scatter(x=dados.index[-200:], y=dados["MA_50"][-200:], name="MA 50"))
+fig2.update_layout(title="Tendência do IBOV — Últimos 200 dias")
+st.plotly_chart(fig2, use_container_width=True)
+
+# ==============================
+# Gráfico variação últimos 50 pregões (ORIGINAL)
+# ==============================
 dados_graf = pd.read_csv(CSV_FILE)
 dados_graf["Data"] = pd.to_datetime(dados_graf["Data"], format="%d.%m.%Y", errors="coerce")
 dados_graf["Var_pct"] = (
-    dados_graf["Var%"].astype(str)
+    dados_graf["Var%"]
+    .astype(str)
     .str.replace("%", "")
-    .str.replace(",", ".")
-    .astype(float)
-)
-dados_graf = dados_graf.dropna().sort_values("Data").tail(50)
-
-fig = go.Figure()
-fig.add_trace(go.Scatter(
-    x=dados_graf["Data"],
-    y=dados_graf["Var_pct"],
-    mode="lines+markers",
-    name="Variação (%)"
-))
-fig.update_layout(title="Variação do IBOV — Últimos 50 pregões")
-st.plotly_chart(fig, use_container_width=True)
-
-# ==============================
-# BOTÃO DE PREDIÇÃO (COM RESULTADO VISÍVEL)
-# ==============================
-if st.button("📊 Realizar Predição"):
-
-    X_test = X.iloc[-TEST_SIZE:]
-    y_test = y.iloc[-TEST_SIZE:]
-
-    proba_test = model.predict_proba(X_test)[:, 1]
-    pred_test = (proba_test >= THRESHOLD).astype(int)
-
-    acc = accuracy_score(y_test, pred_test)
-    precision = precision_score(y_test, pred_test)
-    recall = recall_score(y_test, pred_test)
-
-    st.subheader("📊 Métricas do Modelo")
-    m1, m2, m3 = st.columns(3)
-    m1.metric("Acurácia", f"{acc:.3f}")
-    m2.metric("Precisão", f"{precision:.3f}")
-    m3.metric("Recall", f"{recall:.3f}")
-
-    st.subheader("🔍 Matriz de Confusão")
-    fig_cm, ax = plt.subplots()
-    sns.heatmap(confusion_matrix(y_test, pred_test), annot=True, fmt="d", cmap="Blues", ax=ax)
-    st.pyplot(fig_cm)
-
-    prob_next = model.predict_proba(X.iloc[[-1]])[0, 1]
-    pred_next = int(prob_next >= THRESHOLD)
-
-    st.subheader("🔮 Previsão Próximo Pregão")
-    if pred_next == 1:
-        st.success(f"Alta prevista — Probabilidade: {prob_next*100:.2f}% 📈")
-    else:
-        st.error(f"Queda / Estável — Probabilidade: {prob_next*100:.2f}% 📉")
+    .str.
