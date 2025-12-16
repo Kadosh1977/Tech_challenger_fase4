@@ -177,4 +177,45 @@ dados_graf["Var_pct"] = (
     dados_graf["Var%"]
     .astype(str)
     .str.replace("%", "")
-    .str.
+    .str.replace(",", ".")
+    .astype(float)
+)
+dados_graf = dados_graf.dropna().sort_values("Data").tail(50)
+
+fig3 = go.Figure()
+fig3.add_trace(go.Scatter(
+    x=dados_graf["Data"],
+    y=dados_graf["Var_pct"],
+    mode="lines+markers",
+    name="Variação diária (%)"
+))
+fig3.update_layout(title="Variação diária — Últimos 50 pregões")
+st.plotly_chart(fig3, use_container_width=True)
+
+# ==============================
+# Botão de predição (INALTERADO)
+# ==============================
+if st.button("📊 Realizar Predição"):
+
+    X_test = X.iloc[-TEST_SIZE:]
+    y_test = y.iloc[-TEST_SIZE:]
+
+    proba_test = model.predict_proba(X_test)[:, 1]
+    pred_test = (proba_test >= THRESHOLD).astype(int)
+
+    acc = accuracy_score(y_test, pred_test)
+    precision = precision_score(y_test, pred_test)
+    recall = recall_score(y_test, pred_test)
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Acurácia", f"{acc:.3f}")
+    col2.metric("Precisão", f"{precision:.3f}")
+    col3.metric("Recall", f"{recall:.3f}")
+
+    st.subheader("🔮 Tendência para o próximo pregão")
+    prob_next = model.predict_proba(X.iloc[[-1]])[0, 1]
+
+    if prob_next >= THRESHOLD:
+        st.success(f"PREVISÃO: Alta ({prob_next*100:.2f}%) 📈")
+    else:
+        st.error(f"PREVISÃO: Queda/Estável ({prob_next*100:.2f}%) 📉")
