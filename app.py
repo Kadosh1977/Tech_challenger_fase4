@@ -352,6 +352,7 @@ fig3.update_layout(
     yaxis=dict(tickformat=".2f"),
     template="plotly_dark"
 )
+st.plotly_chart(fig3, use_container_width=True, key="ibov_var_pct")
 # ==============================
 # Botão: validação TEST_SIZE dias + predição do próximo pregão (com features futuras)
 # ==============================
