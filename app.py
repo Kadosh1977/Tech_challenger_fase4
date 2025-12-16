@@ -121,16 +121,26 @@ dados.loc[mask_scale, ["volume", "var_pct"]] = scaler.transform(dados.loc[mask_s
 
 # Dados brutos para uso no gráfico
 
-dados_graf = pd.read_csv("Dados Históricos - Ibovespa 20 anos.csv", decimal=",", thousands=".")
-dados_graf['Var_pct'] = (
-    dados_graf['Var%']
-    .str.replace('%', '', regex=False)
-    .str.replace('.', '', regex=False)   
-    .str.replace(',', '.', regex=False)  
-    .astype(float)                      
+dados_graf = pd.read_csv("Dados Históricos - Ibovespa 20 anos.csv)
+dados_graf["Var_pct"] = (
+    dados_graf["Var%"]
+    .astype(str)
+    .str.replace("%", "", regex=False)
+    .str.replace(",", ".", regex=False)
+    .astype(float)
 )
-# Se Data ainda é string
-dados_graf['Data'] = pd.to_datetime(dados_graf['Data'], dayfirst=True)
+
+dados_graf["Data"] = pd.to_datetime(
+    dados_graf["Data"],
+    format="%d.%m.%Y",
+    errors="coerce"
+    )
+dados_graf = (
+    dados_graf
+    .dropna(subset=["Data", "Var_pct"])
+    .sort_values("Data")
+)
+
 dados_graf = dados_graf.sort_values('Data')
 
 
