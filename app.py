@@ -121,7 +121,7 @@ dados.loc[mask_scale, ["volume", "var_pct"]] = scaler.transform(dados.loc[mask_s
 
 # Dados brutos para uso no gráfico
 
-dados_graf = pd.read_csv("Dados-Historicos-Ibovespa-20-anos.csv", decimal=",", thousands=".")
+dados_graf = pd.read_csv("Dados Históricos - Ibovespa 20 anos.csv", decimal=",", thousands=".")
 dados_graf['Var_pct'] = (
     dados_graf['Var%']
     .str.replace('%', '', regex=False)
