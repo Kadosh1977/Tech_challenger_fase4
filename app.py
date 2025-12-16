@@ -129,6 +129,9 @@ dados_graf['Var_pct'] = (
     .str.replace(',', '.', regex=False)  
     .astype(float)                      
 )
+# Se Data ainda é string
+dados_graf['Data'] = pd.to_datetime(dados_graf['Data'], dayfirst=True, errors='coerce')
+
 
 # ==============================
 # Engenharia de features (replicando o que você já tinha)
@@ -331,7 +334,7 @@ st.plotly_chart(fig2, use_container_width=True)
 fig3 = go.Figure()
 fig3.add_trace(
     go.Scatter(
-        x=pd.to_datetime(dados_graf['Data'], format="%d.%m.%Y"),
+        x=dados_graf['Data'],
         y=dados_graf['Var_pct'],
         name="Variação diária (%)"
     )
