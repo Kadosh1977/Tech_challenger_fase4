@@ -119,6 +119,17 @@ dados["volume"] = np.log1p(dados["volume"])
 mask_scale = ~dados[["volume", "var_pct"]].isnull().any(axis=1)
 dados.loc[mask_scale, ["volume", "var_pct"]] = scaler.transform(dados.loc[mask_scale, ["volume", "var_pct"]])
 
+# Dados brutos para uso no gráfico
+
+dados_graf = pd.read_csv("Dados-Historicos-Ibovespa-20-anos.csv", decimal=",", thousands=".")
+dados_graf['Var_pct'] = (
+    dados_graf['Var%']
+    .str.replace('%', '', regex=False)
+    .str.replace('.', '', regex=False)   
+    .str.replace(',', '.', regex=False)  
+    .astype(float)                      
+)
+
 # ==============================
 # Engenharia de features (replicando o que você já tinha)
 # ==============================
@@ -320,17 +331,18 @@ st.plotly_chart(fig2, use_container_width=True)
 fig3 = go.Figure()
 fig3.add_trace(
     go.Scatter(
-        x=dados.index[-50:],
-        y=dados['var_pct'][-50:],
+        x=pd.to_datetime(dados_graf['Data'], format="%d.%m.%Y"),
+        y=dados_graf['Var_pct'],
         name="Variação diária (%)"
     )
 )
 fig3.update_layout(
-    title="Variação diária do IBOV — Últimos 50 pregões",
+    title="Variação diária do IBOV — Últimos 200 pregões",
     yaxis_title="Variação (%)",
     yaxis=dict(tickformat=".2f")
 )
-st.plotly_chart(fig3, use_container_width=True)
+
+st.plotly_chart(fig3, use_container_width=True, key="ibov_var_pct")
 
 # ==============================
 # Botão: validação TEST_SIZE dias + predição do próximo pregão (com features futuras)
