@@ -185,7 +185,7 @@ ultima_data = X.index.max()
 # KPIs
 # ==============================
 col1, col2, col3 = st.columns(3)
-col1.metric("📅 Último Pregão", ultima_data.date())
+col1.metric("📅 Último Pregão", ultima_data.strftime("%d/%m/%Y"))
 col2.metric("📈 Close", f"{dados.loc[ultima_data,'close']:.0f}")
 col3.metric("📊 RSI", f"{dados.loc[ultima_data,'rsi']:.1f}")
 
