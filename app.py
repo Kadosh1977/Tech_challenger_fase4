@@ -81,7 +81,7 @@ def categorizar_periodo(dt):
         return "recente_2023_atual"
 
 # ==============================
-# Carregar dados
+# Carregar e preparar dados
 # ==============================
 dados = pd.read_csv(CSV_FILE)
 dados["Data"] = pd.to_datetime(dados["Data"], format="%d.%m.%Y", errors="coerce")
@@ -127,7 +127,6 @@ dados["slope_50d"] = calculate_slope(dados["close"], 50)
 dados["rsi"] = calcular_rsi(dados)
 dados["obv"] = calcular_obv(dados)
 
-dados["periodo"] = dados.index.map(categorizar_periodo)
 dados = dados.dropna()
 
 # ==============================
@@ -141,18 +140,21 @@ X = X[features_saved]
 y = dados["target"]
 
 ultima_data = X.index.max()
-X_test = X.iloc[-TEST_SIZE:]
-y_test = y.iloc[-TEST_SIZE:]
 
 # ==============================
-# Informações
+# DASHBOARD — KPIs
 # ==============================
-st.subheader("📅 Último pregão disponível")
-st.write(str(ultima_data.date()))
+st.subheader("📊 Resumo do Dataset")
+k1, k2, k3 = st.columns(3)
+k1.metric("📅 Último Pregão", str(ultima_data.date()))
+k2.metric("📈 Total de Registros", len(dados))
+k3.metric("🎯 Threshold", THRESHOLD)
 
 # ==============================
-# Gráfico variação últimos 50 pregões
+# GRÁFICOS
 # ==============================
+st.subheader("📉 Variação Diária — Últimos 50 Pregões")
+
 dados_graf = pd.read_csv(CSV_FILE)
 dados_graf["Data"] = pd.to_datetime(dados_graf["Data"], format="%d.%m.%Y", errors="coerce")
 dados_graf["Var_pct"] = (
@@ -163,20 +165,23 @@ dados_graf["Var_pct"] = (
 )
 dados_graf = dados_graf.dropna().sort_values("Data").tail(50)
 
-fig_var = go.Figure()
-fig_var.add_trace(go.Scatter(
+fig = go.Figure()
+fig.add_trace(go.Scatter(
     x=dados_graf["Data"],
     y=dados_graf["Var_pct"],
     mode="lines+markers",
-    name="Variação diária (%)"
+    name="Variação (%)"
 ))
-fig_var.update_layout(title="Variação diária — Últimos 50 pregões")
-st.plotly_chart(fig_var, use_container_width=True)
+fig.update_layout(title="Variação do IBOV — Últimos 50 pregões")
+st.plotly_chart(fig, use_container_width=True)
 
 # ==============================
-# Botão de predição
+# BOTÃO DE PREDIÇÃO (COM RESULTADO VISÍVEL)
 # ==============================
 if st.button("📊 Realizar Predição"):
+
+    X_test = X.iloc[-TEST_SIZE:]
+    y_test = y.iloc[-TEST_SIZE:]
 
     proba_test = model.predict_proba(X_test)[:, 1]
     pred_test = (proba_test >= THRESHOLD).astype(int)
@@ -185,23 +190,22 @@ if st.button("📊 Realizar Predição"):
     precision = precision_score(y_test, pred_test)
     recall = recall_score(y_test, pred_test)
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Acurácia", f"{acc:.3f}")
-    col2.metric("Precisão", f"{precision:.3f}")
-    col3.metric("Recall", f"{recall:.3f}")
+    st.subheader("📊 Métricas do Modelo")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Acurácia", f"{acc:.3f}")
+    m2.metric("Precisão", f"{precision:.3f}")
+    m3.metric("Recall", f"{recall:.3f}")
 
     st.subheader("🔍 Matriz de Confusão")
-    cm = confusion_matrix(y_test, pred_test)
     fig_cm, ax = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
+    sns.heatmap(confusion_matrix(y_test, pred_test), annot=True, fmt="d", cmap="Blues", ax=ax)
     st.pyplot(fig_cm)
 
-    X_future = X.iloc[[-1]]
-    prob_next = model.predict_proba(X_future)[0, 1]
+    prob_next = model.predict_proba(X.iloc[[-1]])[0, 1]
     pred_next = int(prob_next >= THRESHOLD)
 
-    st.subheader("🔮 Tendência para o próximo pregão")
+    st.subheader("🔮 Previsão Próximo Pregão")
     if pred_next == 1:
-        st.success(f"PREVISÃO: Alta ({prob_next*100:.2f}%) 📈")
+        st.success(f"Alta prevista — Probabilidade: {prob_next*100:.2f}% 📈")
     else:
-        st.error(f"PREVISÃO: Queda/Estável ({prob_next*100:.2f}%) 📉")
+        st.error(f"Queda / Estável
