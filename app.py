@@ -22,6 +22,27 @@ THRESHOLD = 0.49
 TEST_SIZE = 30
 LOG_FILE = "log_previsoes.csv"
 
+#Sidebar
+st.sidebar.header("⚙️ Painel de Controle")
+
+janela_grafico = st.sidebar.slider(
+    "Janela de análise (pregões)",
+    min_value=20,
+    max_value=300,
+    value=50,
+    step=10
+)
+
+mostrar_targets = st.sidebar.checkbox(
+    "Mostrar últimos targets reais",
+    value=True
+)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Modelo: CatBoost • Dados: IBOVESPA")
+
+
+
 # ==============================
 # Artefatos
 # ==============================
