@@ -144,14 +144,14 @@ ultima_data = X.index.max()
 ultima_data_fmt = ultima_data.strftime("%d/%m/%Y")
 
 # ==============================
-# DASHBOARD (APENAS ADICIONADO)
+# DASHBOARD 
 # ==============================
 st.subheader("📌 Visão Geral")
 
 c1, c2, c3 = st.columns(3)
 c1.metric("📅 Último Pregão", ultima_data_fmt)
 c2.metric("📊 Registros", len(dados))
-c3.metric("🎯 Threshold", THRESHOLD)
+
 
 # ==============================
 # Gráfico de médias móveis (ORIGINAL)
