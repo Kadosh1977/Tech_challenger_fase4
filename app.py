@@ -219,3 +219,53 @@ if st.button("📊 Realizar Predição"):
         st.success(f"PREVISÃO: Alta ({prob_next*100:.2f}%) 📈")
     else:
         st.error(f"PREVISÃO: Queda/Estável ({prob_next*100:.2f}%) 📉")
+    st.subheader("📈 Probabilidade de Alta estimada pelo Modelo")
+
+    # eixo histórico
+    datas_hist = list(X_test.index)
+    prob_hist = list(proba_test)
+
+    # próxima data (previsão)
+    proxima_data = ultima_data + pd.Timedelta(days=1)
+
+    datas_plot = datas_hist + [proxima_data]
+    prob_plot = prob_hist + [display_prob]
+
+    fig_prob = go.Figure()
+
+    # histórico
+    fig_prob.add_trace(go.Scatter(
+        x=datas_hist,
+        y=prob_hist,
+        mode="lines+markers",
+        name="Probabilidade (Histórico)",
+        line=dict(width=2)
+    ))
+
+    # ponto de previsão
+    fig_prob.add_trace(go.Scatter(
+        x=[proxima_data],
+        y=[display_prob],
+        mode="markers",
+        name="Previsão Próximo Pregão",
+        marker=dict(size=14, symbol="diamond")
+    ))
+
+    # linha de threshold
+    fig_prob.add_hline(
+        y=THRESHOLD,
+        line_dash="dash",
+        annotation_text="Threshold",
+        annotation_position="top left"
+    )
+
+    fig_prob.update_layout(
+        title="Probabilidade de Alta — Histórico + Próxima Previsão",
+        xaxis_title="Data",
+        yaxis_title="Probabilidade",
+        yaxis=dict(range=[0, 1]),
+        height=450
+    )
+
+    st.plotly_chart(fig_prob, use_container_width=True)
+
