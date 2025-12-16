@@ -208,4 +208,4 @@ if st.button("📊 Realizar Predição"):
     if pred_next == 1:
         st.success(f"Alta prevista — Probabilidade: {prob_next*100:.2f}% 📈")
     else:
-        st.error(f"Queda / Estável
+        st.error(f"Queda / Estável — Probabilidade: {prob_next*100:.2f}% 📉")
