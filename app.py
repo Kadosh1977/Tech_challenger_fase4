@@ -130,7 +130,9 @@ dados_graf['Var_pct'] = (
     .astype(float)                      
 )
 # Se Data ainda é string
-dados_graf['Data'] = pd.to_datetime(dados_graf['Data'], dayfirst=True, errors='coerce')
+dados_graf['Data'] = pd.to_datetime(dados_graf['Data'], dayfirst=True)
+dados_graf = dados_graf.sort_values('Data')
+
 
 
 # ==============================
@@ -329,24 +331,27 @@ fig2.update_layout(title="Tendência do IBOV — Últimos 200 dias")
 st.plotly_chart(fig2, use_container_width=True)
 
 #st.subheader("📊 Análises Temporais do IBOVESPA")
+# Últimos 50 pregões
+dados_graf_50 = dados_graf.tail(50)
 
-# Gráfico da variação percentual (últimos 200 dias)
+# Criar gráfico
 fig3 = go.Figure()
 fig3.add_trace(
     go.Scatter(
-        x=dados_graf['Data'],
-        y=dados_graf['Var_pct'],
+        x=dados_graf_50['Data'],
+        y=dados_graf_50['Var_pct'],
+        mode='lines+markers',
         name="Variação diária (%)"
     )
 )
+
 fig3.update_layout(
-    title="Variação diária do IBOV — Últimos 200 pregões",
+    title="Variação diária do IBOV — Últimos 50 pregões",
+    xaxis_title="Data",
     yaxis_title="Variação (%)",
-    yaxis=dict(tickformat=".2f")
+    yaxis=dict(tickformat=".2f"),
+    template="plotly_dark"
 )
-
-st.plotly_chart(fig3, use_container_width=True, key="ibov_var_pct")
-
 # ==============================
 # Botão: validação TEST_SIZE dias + predição do próximo pregão (com features futuras)
 # ==============================
