@@ -214,6 +214,7 @@ if st.button("📊 Realizar Predição"):
 
     st.subheader("🔮 Tendência para o próximo pregão")
     prob_next = model.predict_proba(X.iloc[[-1]])[0, 1]
+    display_prob = float(prob_next)
 
     if prob_next >= THRESHOLD:
         st.success(f"PREVISÃO: Alta ({prob_next*100:.2f}%) 📈")
