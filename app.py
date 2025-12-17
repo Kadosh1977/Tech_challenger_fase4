@@ -17,7 +17,7 @@ import csv
 st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered")
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
-CSV_FILE = "base_de_dados"
+CSV_FILE = "base_de_dados.csv"
 THRESHOLD = 0.55
 TEST_SIZE = 30
 LOG_FILE = "log_previsoes.csv"
