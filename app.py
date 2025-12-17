@@ -270,7 +270,7 @@ dados['MA_20'] = dados['close'].rolling(20).mean()
 dados['MA_50'] = dados['close'].rolling(50).mean()
 
 dados_plot = dados.tail(janela_grafico)
-dos_plot['target_plot'] = dados_plot['target'].shift(1)
+dados_plot['target_plot'] = dados_plot['target'].shift(1)
 
 # ==============================
 # Criar gráfico
