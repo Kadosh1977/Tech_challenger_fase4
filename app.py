@@ -15,7 +15,7 @@ st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered"
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
 CSV_FILE = "base_de_dados.csv"
-THRESHOLD = 0.55
+THRESHOLD = 0.50
 TEST_SIZE = 30
 
 # ==============================
