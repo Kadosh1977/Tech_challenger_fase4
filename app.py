@@ -18,7 +18,7 @@ st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered"
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
 CSV_FILE = "Dados Históricos - Ibovespa 20 anos.csv"
-THRESHOLD = 0.49
+THRESHOLD = 0.55
 TEST_SIZE = 30
 LOG_FILE = "log_previsoes.csv"
 
@@ -48,7 +48,7 @@ st.sidebar.caption("Modelo: CatBoost • Dados: IBOVESPA")
 # ==============================
 model = joblib.load("modelo_final_catboost.joblib")
 scaler = joblib.load("scaler_dados_ibovespa.joblib")
-features_saved = joblib.load("features_modelo_ibov.joblib")
+features_saved = joblib.load("colunas_treinamento.joblib")
 
 # ==============================
 # Funções auxiliares
