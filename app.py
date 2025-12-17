@@ -292,7 +292,7 @@ if st.button("📊 Realizar Predição"):
     c1.metric("Acurácia", f"{acc:.3f}")
     c2.metric("Precisão", f"{prec:.3f}")
     c3.metric("Recall", f"{rec:.3f}")
-    c4.metric("F1", f"{rec:.3f}")
+    c4.metric("F1", f"{f1:.3f}")
 
     st.subheader("🔮 Próximo Pregão")
     next_proba = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
