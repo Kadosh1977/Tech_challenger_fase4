@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import linregress
 import joblib
 from catboost import Pool
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import plotly.graph_objects as go
 import os
 
