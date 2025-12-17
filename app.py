@@ -251,17 +251,61 @@ st.metric("📅 Último Pregão", X.index.max().strftime('%d/%m/%Y'))
 st.metric("📊 Registros", len(X))
 
 # ==============================
-# Gráfico de preços
+# Sidebar
+# ==============================
+st.sidebar.header("⚙️ Painel de Controle")
+janela_grafico = st.sidebar.slider(
+    "Janela de análise (pregões)", 20, 300, 50, 10
+)
+mostrar_targets = st.sidebar.checkbox(
+    "Mostrar últimos targets reais", value=True
+)
+
+# ==============================
+# Preparar dados do gráfico
 # ==============================
 st.subheader("📊 Tendência do IBOV")
+
 dados['MA_20'] = dados['close'].rolling(20).mean()
 dados['MA_50'] = dados['close'].rolling(50).mean()
 
+dados_plot = dados.tail(janela_grafico)
+
+# ==============================
+# Criar gráfico
+# ==============================
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=dados.index[-200:], y=dados['close'][-200:], name='Preço'))
-fig.add_trace(go.Scatter(x=dados.index[-200:], y=dados['MA_20'][-200:], name='MA 20'))
-fig.add_trace(go.Scatter(x=dados.index[-200:], y=dados['MA_50'][-200:], name='MA 50'))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['close'],
+    name='Preço'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_20'],
+    name='MA 20'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_50'],
+    name='MA 50'
+))
+
+# Opcional: targets reais
+if mostrar_targets:
+    alvos = dados_plot[dados_plot['target'] == 1]
+    fig.add_trace(go.Scatter(
+        x=alvos.index,
+        y=alvos['close'],
+        mode='markers',
+        name='Alta real'
+    ))
+
 st.plotly_chart(fig, use_container_width=True)
+
 
 # ==============================
 # Predição
@@ -295,29 +339,3 @@ if st.button("📊 Realizar Predição"):
     else:
         st.error(f"QUEDA/ESTÁVEL ({next_proba*100:.2f}%) 📉")
 
-# ==============================
-# Sidebar
-# ==============================
-st.sidebar.header("⚙️ Painel de Controle")
-janela_grafico = st.sidebar.slider("Janela de análise (pregões)", 20, 300, 50, 10)
-mostrar_targets = st.sidebar.checkbox("Mostrar últimos targets reais", value=True)
-
-dados_plot = dados.tail(janela_grafico)
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['close'],
-    name='Preço'
-))
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_20'],
-    name='MA 20'
-))
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_50'],
-    name='MA 50'
-))
