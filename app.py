@@ -26,6 +26,27 @@ st.sidebar.header("⚙️ Painel de Controle")
 janela_grafico = st.sidebar.slider("Janela de análise (pregões)", 20, 300, 50, 10)
 mostrar_targets = st.sidebar.checkbox("Mostrar últimos targets reais", value=True)
 
+dados_plot = dados.tail(janela_grafico)
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['close'],
+    name='Preço'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_20'],
+    name='MA 20'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_50'],
+    name='MA 50'
+))
+
+
 # ==============================
 # Carregar artefatos
 # ==============================
