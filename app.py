@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from scipy.stats import linregress
 import joblib
 from catboost import Pool
 from sklearn.metrics import accuracy_score, precision_score, recall_score
@@ -15,7 +16,7 @@ st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered"
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
 CSV_FILE = "base_de_dados.csv"
-THRESHOLD = 0.48
+THRESHOLD = 0.55
 TEST_SIZE = 30
 
 # ==============================
@@ -49,15 +50,15 @@ def tratar_coluna_volume(coluna):
     return pd.to_numeric(coluna, errors='coerce')
 
 
-def calculate_slope(series, window):
+def calculate_slope(data, window):
     from scipy.stats import linregress
     slopes = [np.nan] * (window - 1)
-    for i in range(window, len(series) + 1):
-        y = series.iloc[i - window:i].values
+    for i in range(window, len(data) + 1):
+        y = data.iloc[i - window:i]
         x = np.arange(len(y))
         slope, _, _, _, _ = linregress(x, y)
         slopes.append(slope)
-    return pd.Series(slopes, index=series.index)
+    return slopes
 
 
 def calcular_rsi(df, periodo=14):
@@ -70,9 +71,15 @@ def calcular_rsi(df, periodo=14):
     rs.loc[media_perda == 0] = np.inf
     return 100 - (100 / (1 + rs))
 
+def calcular_close_position(dados):
+    faixa_de_preco = dados['high'] - dados['low']
+    posicao = (dados['close'] - dados['low']) / faixa_de_preco
+    posicao.loc[faixa_de_preco == 0] = 0.5
+    return posicao
 
-def calcular_obv(df):
-    return (np.sign(df['close'].diff()) * df['volume']).cumsum()
+
+def calcular_obv(dados):
+    return (np.sign(dados['close'].diff()) * dados['volume']).cumsum()
 
 
 def categorizar_periodo(data):
@@ -114,33 +121,161 @@ dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
 # ==============================
 # Engenharia de features (SUBCONJUNTO DO JUPYTER)
 # ==============================
-
-dados['open_lag_1'] = dados['open'].shift(1)
-dados['high_lag_1'] = dados['high'].shift(1)
-dados['low_lag_1'] = dados['low'].shift(1)
-dados['volume_lag_1'] = dados['volume'].shift(1)
-dados['var_pct_lag_1'] = dados['var_pct'].shift(1)
+#LAGS
+for lag in [1]:
+    dados[f"open_lag_{lag}"] = dados["open"].shift(lag)
+    dados[f"high_lag_{lag}"] = dados["high"].shift(lag)
+    dados[f"low_lag_{lag}"] = dados["low"].shift(lag)
+    dados[f"volume_lag_{lag}"] = dados["volume"].shift(lag)
+    dados[f"var_pct_lag_{lag}"] = dados["var_pct"].shift(lag)
 
 for lag in [5, 10, 15, 20]:
-    dados[f'var_pct_lag_{lag}'] = dados['var_pct'].shift(lag)
+    dados[f"var_pct_lag_{lag}"] = dados["var_pct"].shift(lag)
 
-# Retornos
-dados['return_1w'] = dados['close'].pct_change(5)
-dados['return_2m'] = dados['close'].pct_change(60)
+# Retorno Semanal e Mensal (considerando 5 e 60 dias de pregão)
+dados['return_1w'] = dados['close'].pct_change(periods=5)
+dados['return_2m'] = dados['close'].pct_change(periods=60)
 
+dados['volume_pct_change'] = dados['volume'].pct_change()
+# Criação da feature de Posição do Fechamento
+dados['close_position'] = (dados['close'] - dados['low']) / (dados['high'] - dados['low'])
+# Trata divisões por zero, caso low == high
+dados.loc[dados['high'] == dados['low'], 'close_position'] = 0.5
+
+# Adiciona o range do dia
+dados['daily_range'] = dados['high'] - dados['low']
+
+# Calcula o Force Index de 2 dias (exemplo)
+dados['force_index'] = (dados['close'].diff()) * dados['volume']
+dados['force_index_2d'] = dados['force_index'].rolling(window=2).mean()
+
+
+#INCLINAÇÃO DA LINHA DE TENDENCIA
+
+from scipy.stats import linregress
+import numpy as np
+
+# --- Função para calcular a inclinação de uma janela ---
+def calculate_slope(data, window):
+    # Cria uma lista de NaN para as primeiras janelas
+    slopes = [np.nan] * (window - 1)
+
+    # Itera sobre o DataFrame para calcular a inclinação em janelas móveis
+    for i in range(window, len(data) + 1):
+        y = data[i-window:i]
+        x = np.arange(len(y))
+
+        # Realiza a regressão linear
+        slope, _, _, _, _ = linregress(x, y)
+        slopes.append(slope)
+
+    return slopes
+
+# --- Adicionando o feature de inclinação ao DataFrame ---
+# Calcule a inclinação para janelas de 20 e 50 dias
+dados['slope_20d'] = calculate_slope(dados['close'], window=20)
+
+
+#FEATURES DE INDICADORES TÉCNICOS
+def calcular_rsi(dados, periodo=14):
+    delta = dados['close'].diff()
+    ganho = delta.where(delta > 0, 0)
+    perda = -delta.where(delta < 0, 0)
+    media_ganho = ganho.rolling(window=periodo, min_periods=periodo).mean()
+    media_perda = perda.rolling(window=periodo, min_periods=periodo).mean()
+    rs = media_ganho / media_perda
+    rs.loc[media_perda == 0] = np.inf
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+def calcular_obv(dados):
+    direcao = np.sign(dados['close'].diff())
+    obv = (direcao * dados['volume']).cumsum()
+    return obv
+
+def calcular_close_position(dados):
+    faixa_de_preco = dados['high'] - dados['low']
+    posicao = (dados['close'] - dados['low']) / faixa_de_preco
+    posicao.loc[faixa_de_preco == 0] = 0.5
+    return posicao
+
+# --- 2. Preparação do DataFrame e Criação das Features ---
+# Crie as features de volume e preço originais
 dados['volume_pct_change'] = dados['volume'].pct_change()
 dados['daily_range'] = dados['high'] - dados['low']
 
-dados['slope_20d'] = calculate_slope(dados['close'], 20)
+# Crie as novas features (RSI, OBV, close_position)
 dados['rsi'] = calcular_rsi(dados)
 dados['obv'] = calcular_obv(dados)
+dados['close_position'] = calcular_close_position(dados)
 
-# Período categórico
+# --- 3. Aplique os Lags para Prevenir Vazamento de Dados ---
+# As features que o modelo usará para o treino
+dados['rsi_lag_1'] = dados['rsi'].shift(1)
+dados['obv_lag_1'] = dados['obv'].shift(1)
+dados['close_position_lag_1'] = dados['close_position'].shift(1)
+
+# Lags para as features de volume e range
+dados['volume_lag_1'] = dados['volume'].shift(1)
+dados['volume_pct_change_lag_1'] = dados['volume_pct_change'].shift(1)
+dados['daily_range_lag_1'] = dados['daily_range'].shift(1)
+
+# 1. Calcule a volatilidade de curto e longo prazo
+short_window = 20
+long_window = 100
+
+dados.loc[:, 'volatility_short'] = dados['daily_range'].rolling(window=short_window).std()
+dados.loc[:, 'volatility_long'] = dados['daily_range'].rolling(window=long_window).std()
+
+# 2. Calcule a proporção de volatilidade
+dados.loc[:, 'volatility_ratio'] = (
+    dados['volatility_short'] / (dados['volatility_long'] + 1e-6)
+)
+
+# 3. Trate os valores infinitos e nulos
+import numpy as np
+
+dados.loc[:, 'volatility_ratio'] = (
+    dados['volatility_ratio']
+    .replace([np.inf, -np.inf], np.nan)
+    .bfill()
+)
+
+#SENTIMENTO DO MERCADO
+# Aceleração da Força (variação percentual)
+dados['force_index_pct_change'] = dados['force_index'].pct_change()
+
+# Aceleração da Força (diferença)
+dados['force_index_diff'] = dados['force_index'].diff()
+
+#POSIÇÃO RELATIVA E NORMALIZAÇÃO
+# Aceleração da Força (variação percentual)
+dados['force_index_pct_change'] = dados['force_index'].pct_change()
+
+# Aceleração da Força (diferença)
+dados['force_index_diff'] = dados['force_index'].diff()
+
+#RELEVANCIA TEMPORAL PARA IDENTIFICAR MUDANÇAS DE REGIMES NO MERCADO
+# Função para categorizar por períodos históricos
+def categorizar_periodo(data):
+    if data.year <= 2009:
+        return "crise_2005_2009"
+    elif data.year <= 2019:
+        return "pre_pandemia_2010_2019"
+    elif data.year <= 2022:
+        return "pandemia_2020_2022"
+    else:
+        return "recente_2023_atual"
+
+# 1. Criar coluna categórica
 dados['periodo'] = dados.index.map(categorizar_periodo)
-dados['periodo'] = pd.Categorical(
-    dados['periodo'],
-    categories=["crise_2005_2009", "pre_pandemia_2010_2019", "pandemia_2020_2022", "recente_2023_atual"],
-    ordered=True
+
+# 2. Transformar em tipo categórico explícito
+dados['periodo'] = dados['periodo'].astype(
+    pd.CategoricalDtype(
+        categories=["crise_2005_2009", "pre_pandemia_2010_2019", "pandemia_2020_2022", "recente_2023_atual"],
+        ordered=True
+    )
 )
 
 # Limpeza
