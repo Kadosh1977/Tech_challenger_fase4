@@ -34,7 +34,7 @@ scaler = joblib.load("scaler_dados_ibovespa.joblib")
 features_saved = joblib.load("colunas_treinamento.joblib").columns.tolist()
 
 # ==============================
-# Funções auxiliares (IGUAIS AO JUPYTER)
+# Funções auxiliares 
 # ==============================
 def tratar_coluna_volume(coluna):
     coluna = coluna.astype(str).copy()
@@ -48,49 +48,6 @@ def tratar_coluna_volume(coluna):
             .astype(float) * m
         )
     return pd.to_numeric(coluna, errors='coerce')
-
-
-def calculate_slope(data, window):
-    from scipy.stats import linregress
-    slopes = [np.nan] * (window - 1)
-    for i in range(window, len(data) + 1):
-        y = data.iloc[i - window:i]
-        x = np.arange(len(y))
-        slope, _, _, _, _ = linregress(x, y)
-        slopes.append(slope)
-    return slopes
-
-
-def calcular_rsi(df, periodo=14):
-    delta = df['close'].diff()
-    ganho = delta.where(delta > 0, 0)
-    perda = -delta.where(delta < 0, 0)
-    media_ganho = ganho.rolling(periodo).mean()
-    media_perda = perda.rolling(periodo).mean()
-    rs = media_ganho / media_perda
-    rs.loc[media_perda == 0] = np.inf
-    return 100 - (100 / (1 + rs))
-
-def calcular_close_position(dados):
-    faixa_de_preco = dados['high'] - dados['low']
-    posicao = (dados['close'] - dados['low']) / faixa_de_preco
-    posicao.loc[faixa_de_preco == 0] = 0.5
-    return posicao
-
-
-def calcular_obv(dados):
-    return (np.sign(dados['close'].diff()) * dados['volume']).cumsum()
-
-
-def categorizar_periodo(data):
-    if data.year <= 2009:
-        return "crise_2005_2009"
-    elif data.year <= 2019:
-        return "pre_pandemia_2010_2019"
-    elif data.year <= 2022:
-        return "pandemia_2020_2022"
-    else:
-        return "recente_2023_atual"
 
 # ==============================
 # Carregar e preparar dados
@@ -329,11 +286,13 @@ if st.button("📊 Realizar Predição"):
     acc = accuracy_score(y_test, pred)
     prec = precision_score(y_test, pred)
     rec = recall_score(y_test, pred)
+    f1 = f1_score(y_test, pred)
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Acurácia", f"{acc:.3f}")
     c2.metric("Precisão", f"{prec:.3f}")
     c3.metric("Recall", f"{rec:.3f}")
+    c4.metric("F1", f"{rec:.3f}")
 
     st.subheader("🔮 Próximo Pregão")
     next_proba = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
