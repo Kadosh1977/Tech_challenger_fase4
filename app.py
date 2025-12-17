@@ -270,6 +270,7 @@ dados['MA_20'] = dados['close'].rolling(20).mean()
 dados['MA_50'] = dados['close'].rolling(50).mean()
 
 dados_plot = dados.tail(janela_grafico)
+dos_plot['target_plot'] = dados_plot['target'].shift(1)
 
 # ==============================
 # Criar gráfico
@@ -296,7 +297,8 @@ fig.add_trace(go.Scatter(
 
 # Opcional: targets reais
 if mostrar_targets:
-    alvos = dados_plot[dados_plot['target'] == 1]
+    alvos = dados_plot[dados_plot['target_plot'] == 1]
+
     fig.add_trace(go.Scatter(
         x=alvos.index,
         y=alvos['close'],
