@@ -20,34 +20,6 @@ THRESHOLD = 0.55
 TEST_SIZE = 30
 
 # ==============================
-# Sidebar
-# ==============================
-st.sidebar.header("⚙️ Painel de Controle")
-janela_grafico = st.sidebar.slider("Janela de análise (pregões)", 20, 300, 50, 10)
-mostrar_targets = st.sidebar.checkbox("Mostrar últimos targets reais", value=True)
-
-dados_plot = dados.tail(janela_grafico)
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['close'],
-    name='Preço'
-))
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_20'],
-    name='MA 20'
-))
-
-fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_50'],
-    name='MA 50'
-))
-
-
-# ==============================
 # Carregar artefatos
 # ==============================
 model = joblib.load("modelo_final_catboost.joblib")
@@ -322,3 +294,30 @@ if st.button("📊 Realizar Predição"):
         st.success(f"ALTA ({next_proba*100:.2f}%) 📈")
     else:
         st.error(f"QUEDA/ESTÁVEL ({next_proba*100:.2f}%) 📉")
+
+# ==============================
+# Sidebar
+# ==============================
+st.sidebar.header("⚙️ Painel de Controle")
+janela_grafico = st.sidebar.slider("Janela de análise (pregões)", 20, 300, 50, 10)
+mostrar_targets = st.sidebar.checkbox("Mostrar últimos targets reais", value=True)
+
+dados_plot = dados.tail(janela_grafico)
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['close'],
+    name='Preço'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_20'],
+    name='MA 20'
+))
+
+fig.add_trace(go.Scatter(
+    x=dados_plot.index,
+    y=dados_plot['MA_50'],
+    name='MA 50'
+))
