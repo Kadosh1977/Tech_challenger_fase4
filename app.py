@@ -328,7 +328,10 @@ fig_prob.add_trace(go.Scatter(
     y=dados_prob['close'],
     name="Fechamento IBOV",
     yaxis="y1",
-    line=dict(width=2)
+    line=dict(width=2),
+    hovertemplate=(
+        "Data: %{x}<br>"
+        "Fechamento: %{y:.2f}<extra></extra>"
 ))
 
 # Probabilidade
