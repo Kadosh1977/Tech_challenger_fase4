@@ -331,7 +331,7 @@ fig_prob.add_trace(go.Scatter(
     line=dict(width=2),
     hovertemplate=(
         "Data: %{x}<br>"
-        "Fechamento: %{y:.2f}<extra></extra>"
+        "Fechamento: %{y:.2f}<extra></extra>")
 ))
 
 # Probabilidade
