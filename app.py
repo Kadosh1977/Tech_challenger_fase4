@@ -346,10 +346,7 @@ fig_prob.add_trace(go.Scatter(
     y=[THRESHOLD] * len(dados_prob),
     name="Threshold",
     yaxis="y2",
-    line=dict(dash="dash"),
-    hovertemplate=(
-        "Data: %{x}<br>"
-        "Treshold: %{y:.2f}<extra></extra>")
+    line=dict(dash="dash")   
 ))
 
 # Targets reais
@@ -360,7 +357,10 @@ if mostrar_targets:
         y=alvos['proba_modelo'],
         mode="markers",
         name="Alta Real",
-        yaxis="y2"
+        yaxis="y2",
+        hovertemplate=(
+        "Alta Real: %{x}<br>"
+        "Treshold: %{y:.2f}<extra></extra>")
     ))
 
 # Layout
