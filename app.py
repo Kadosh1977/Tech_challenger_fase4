@@ -360,7 +360,7 @@ if mostrar_targets:
         yaxis="y2",
         hovertemplate=(
         "Alta Real: %{x}<br>"
-        "Treshold: %{y:.2f}<extra></extra>")
+        "Confiança do modelo: %{y:.2f}<extra></extra>")
     ))
 
 # Layout
@@ -378,6 +378,13 @@ fig_prob.update_layout(
 )
 
 st.plotly_chart(fig_prob, use_container_width=True)
+
+with st.expander("ℹ️ Como interpretar este gráfico"):
+    st.write(
+        "Quando o preço sobe, mas a confiança do modelo não acompanha, "
+        "o movimento pode estar perto do fim."
+    )
+
 
 
 # ==============================
