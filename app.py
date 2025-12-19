@@ -69,7 +69,7 @@ dados['volume'] = np.log1p(dados['volume'])
 dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
 
 # ==============================
-# Engenharia de features (SUBCONJUNTO DO JUPYTER)
+# Engenharia de features
 # ==============================
 #LAGS
 for lag in [1]:
@@ -122,7 +122,7 @@ def calculate_slope(data, window):
     return slopes
 
 # --- Adicionando o feature de inclinação ao DataFrame ---
-# Calcule a inclinação para janelas de 20 e 50 dias
+# Calcule a inclinação para janelas de 20 dias
 dados['slope_20d'] = calculate_slope(dados['close'], window=20)
 
 
@@ -149,7 +149,6 @@ def calcular_close_position(dados):
     posicao.loc[faixa_de_preco == 0] = 0.5
     return posicao
 
-# --- 2. Preparação do DataFrame e Criação das Features ---
 # Crie as features de volume e preço originais
 dados['volume_pct_change'] = dados['volume'].pct_change()
 dados['daily_range'] = dados['high'] - dados['low']
@@ -159,8 +158,8 @@ dados['rsi'] = calcular_rsi(dados)
 dados['obv'] = calcular_obv(dados)
 dados['close_position'] = calcular_close_position(dados)
 
-# --- 3. Aplique os Lags para Prevenir Vazamento de Dados ---
-# As features que o modelo usará para o treino
+# Lags para Prevenir Vazamento de Dados
+
 dados['rsi_lag_1'] = dados['rsi'].shift(1)
 dados['obv_lag_1'] = dados['obv'].shift(1)
 dados['close_position_lag_1'] = dados['close_position'].shift(1)
@@ -170,19 +169,19 @@ dados['volume_lag_1'] = dados['volume'].shift(1)
 dados['volume_pct_change_lag_1'] = dados['volume_pct_change'].shift(1)
 dados['daily_range_lag_1'] = dados['daily_range'].shift(1)
 
-# 1. Calcule a volatilidade de curto e longo prazo
+# Calcular a volatilidade de curto e longo prazo
 short_window = 20
 long_window = 100
 
 dados.loc[:, 'volatility_short'] = dados['daily_range'].rolling(window=short_window).std()
 dados.loc[:, 'volatility_long'] = dados['daily_range'].rolling(window=long_window).std()
 
-# 2. Calcule a proporção de volatilidade
+# Calcular a proporção de volatilidade
 dados.loc[:, 'volatility_ratio'] = (
     dados['volatility_short'] / (dados['volatility_long'] + 1e-6)
 )
 
-# 3. Trate os valores infinitos e nulos
+# Tratar os valores infinitos e nulos
 import numpy as np
 
 dados.loc[:, 'volatility_ratio'] = (
@@ -244,7 +243,7 @@ for col in features_saved:
 X = X[features_saved]
 
 # ==============================
-# Dashboard (MANTIDO)
+# Dashboard 
 # ==============================
 st.subheader("📌 Visão Geral")
 st.metric("📅 Último Pregão", X.index.max().strftime('%d/%m/%Y'))
@@ -280,7 +279,7 @@ fig = go.Figure()
 fig.add_trace(go.Scatter(
     x=dados_plot.index,
     y=dados_plot['close'],
-    name='Preço'
+    name='Fechamento'
 ))
 
 fig.add_trace(go.Scatter(
@@ -295,7 +294,7 @@ fig.add_trace(go.Scatter(
     name='MA 50'
 ))
 
-# Opcional: targets reais
+# Mostrar targets de alta
 if mostrar_targets:
     alvos = dados_plot[dados_plot['target_plot'] == 1]
 
