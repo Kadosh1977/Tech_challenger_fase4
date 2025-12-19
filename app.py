@@ -328,10 +328,7 @@ fig_prob.add_trace(go.Scatter(
     y=dados_prob['close'],
     name="Fechamento IBOV",
     yaxis="y1",
-    line=dict(width=2),
-    hovertemplate=(
-        "Data: %{x}<br>"
-        "Fechamento: %{y:.2f}<extra></extra>")
+    line=dict(width=2)    
 ))
 
 # Probabilidade
@@ -349,7 +346,10 @@ fig_prob.add_trace(go.Scatter(
     y=[THRESHOLD] * len(dados_prob),
     name="Threshold",
     yaxis="y2",
-    line=dict(dash="dash")
+    line=dict(dash="dash"),
+    hovertemplate=(
+        "Data: %{x}<br>"
+        "Treshold: %{y:.2f}<extra></extra>")
 ))
 
 # Targets reais
