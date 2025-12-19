@@ -308,6 +308,75 @@ if mostrar_targets:
 st.plotly_chart(fig, use_container_width=True)
 
 
+st.subheader("🧠 Probabilidade do Modelo x Preço")
+
+# --- Janela usada no gráfico ---
+dados_prob = dados.tail(janela_grafico).copy()
+
+# --- Predição histórica (sem vazamento) ---
+cat_features = X.select_dtypes(include=['object', 'category']).columns.tolist()
+pool_hist = Pool(X.loc[dados_prob.index], cat_features=cat_features)
+
+dados_prob['proba_modelo'] = model.predict_proba(pool_hist)[:, 1]
+
+# --- Criar figura com eixo duplo ---
+fig_prob = go.Figure()
+
+# Preço
+fig_prob.add_trace(go.Scatter(
+    x=dados_prob.index,
+    y=dados_prob['close'],
+    name="Fechamento IBOV",
+    yaxis="y1",
+    line=dict(width=2)
+))
+
+# Probabilidade
+fig_prob.add_trace(go.Scatter(
+    x=dados_prob.index,
+    y=dados_prob['proba_modelo'],
+    name="Probabilidade de Alta",
+    yaxis="y2",
+    line=dict(dash="dot")
+))
+
+# Threshold
+fig_prob.add_trace(go.Scatter(
+    x=dados_prob.index,
+    y=[THRESHOLD] * len(dados_prob),
+    name="Threshold",
+    yaxis="y2",
+    line=dict(dash="dash")
+))
+
+# Targets reais
+if mostrar_targets:
+    alvos = dados_prob[dados_prob['target'] == 1]
+    fig_prob.add_trace(go.Scatter(
+        x=alvos.index,
+        y=alvos['proba_modelo'],
+        mode="markers",
+        name="Alta Real",
+        yaxis="y2"
+    ))
+
+# Layout
+fig_prob.update_layout(
+    height=500,
+    xaxis_title="Data",
+    yaxis=dict(title="Preço"),
+    yaxis2=dict(
+        title="Probabilidade",
+        overlaying="y",
+        side="right",
+        range=[0, 1]
+    ),
+    legend=dict(orientation="h", y=-0.2)
+)
+
+st.plotly_chart(fig_prob, use_container_width=True)
+
+
 # ==============================
 # Predição
 # ==============================
