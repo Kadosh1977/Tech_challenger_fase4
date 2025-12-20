@@ -251,7 +251,7 @@ y = dados['target']
 # Garantir mesmas colunas do treino
 for col in features_saved:
     if col not in X.columns:
-        if col !="periodo':
+        if col !="periodo":
         X[col] = np.nan
 
 X["periodo"] = (
