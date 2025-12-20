@@ -9,9 +9,13 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import plotly.graph_objects as go
 import os
 
+st.session_state.executou_predicao = False
+
 # ==============================
 # Configuração Streamlit
 # ==============================
+st.session_state.executou_predicao = False
+
 st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered")
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
@@ -24,7 +28,7 @@ TEST_SIZE = 30
 # ==============================
 model = joblib.load("modelo_final_catboost.joblib")
 scaler = joblib.load("scaler_dados_ibovespa.joblib")
-features_saved = joblib.load("colunas_treinamento.joblib").columns.tolist()
+features_saved = joblib.load("colunas_treinamento.joblib") #.columns.tolist()
 
 # ==============================
 # Funções auxiliares 
@@ -252,6 +256,20 @@ st.metric("📊 Registros", len(X))
 # ==============================
 # Sidebar
 # ==============================
+
+st.sidebar.subheader("📅 Filtro de Datas (Visualização)")
+
+data_min = dados.index.min().date()
+data_max = dados.index.max().date()
+
+data_inicio, data_fim = st.sidebar.date_input(
+    "Período",
+    value=(data_min, data_max),
+    min_value=data_min,
+    max_value=data_max
+)
+
+
 st.sidebar.header("⚙️ Painel de Controle")
 janela_grafico = st.sidebar.slider(
     "Janela de análise (pregões)", 20, 300, 50, 10
@@ -261,15 +279,21 @@ mostrar_targets = st.sidebar.checkbox(
 )
 
 # ==============================
-# Preparar dados do gráfico
+# Preparar dados do gráfico (VISUALIZAÇÃO)
 # ==============================
 st.subheader("📊 Tendência do IBOV")
 
-dados['MA_20'] = dados['close'].rolling(20).mean()
-dados['MA_50'] = dados['close'].rolling(50).mean()
+dados_vis = dados.loc[
+    (dados.index.date >= data_inicio) &
+    (dados.index.date <= data_fim)
+].copy()
 
-dados_plot = dados.tail(janela_grafico)
-dados_plot['target_plot'] = dados_plot['target'].shift(1)
+# Médias móveis (calculadas APÓS o filtro)
+dados_vis['MA_20'] = dados_vis['close'].rolling(20).mean()
+dados_vis['MA_50'] = dados_vis['close'].rolling(50).mean()
+
+# Target apenas para visualização (sem vazamento)
+dados_vis['target_plot'] = dados_vis['target'].shift(1)
 
 # ==============================
 # Criar gráfico
@@ -277,26 +301,26 @@ dados_plot['target_plot'] = dados_plot['target'].shift(1)
 fig = go.Figure()
 
 fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['close'],
+    x=dados_vis.index,
+    y=dados_vis['close'],
     name='Fechamento'
 ))
 
 fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_20'],
+    x=dados_vis.index,
+    y=dados_vis['MA_20'],
     name='MA 20'
 ))
 
 fig.add_trace(go.Scatter(
-    x=dados_plot.index,
-    y=dados_plot['MA_50'],
+    x=dados_vis.index,
+    y=dados_vis['MA_50'],
     name='MA 50'
 ))
 
-# Mostrar targets de alta
+# Mostrar targets reais (apenas visual)
 if mostrar_targets:
-    alvos = dados_plot[dados_plot['target_plot'] == 1]
+    alvos = dados_vis[dados_vis['target_plot'] == 1]
 
     fig.add_trace(go.Scatter(
         x=alvos.index,
@@ -390,7 +414,9 @@ with st.expander("ℹ️ Como interpretar este gráfico"):
 # ==============================
 # Predição
 # ==============================
+st.subheader("🧠 Predição")
 if st.button("📊 Realizar Predição"):
+    st.session_state.executou_predicao = True	
     X_test = X.iloc[-TEST_SIZE:]
     y_test = y.iloc[-TEST_SIZE:]
 
@@ -411,11 +437,24 @@ if st.button("📊 Realizar Predição"):
     c3.metric("Recall", f"{rec:.3f}")
     c4.metric("F1", f"{f1:.3f}")
 
-    st.subheader("🔮 Próximo Pregão")
-    next_proba = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
+    # Predição (Trecho Corrigido)
+# ==============================
+if st.session_state.executou_predicao:
+    st.subheader("🔮 Tendência para o próximo Pregão")
+    cat_features = X_test.select_dtypes(include=['object', 'category']).columns.tolist()
 
-    if next_proba >= THRESHOLD:
-        st.success(f"ALTA ({next_proba*100:.2f}%) 📈")
+    
+# Obtém a probabilidade da classe 1 (ALTA)
+    next_proba_alta = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
+
+    if next_proba_alta >= THRESHOLD:
+    # Se acima do threshold, exibe a probabilidade de ALTA
+        st.success(f"ALTA ({next_proba_alta*100:.2f}%) 📈")
     else:
-        st.error(f"QUEDA/ESTÁVEL ({next_proba*100:.2f}%) 📉")
+    # Se abaixo do threshold, calculamos a probabilidade de QUEDA/ESTÁVEL
+    # que é o complemento (100% - Probabilidade de Alta)
+        proba_queda = (1 - next_proba_alta) * 100
+        st.error(f"QUEDA/ESTÁVEL ({proba_queda:.2f}%) 📉")
 
+# Dica visual: Adicionar um pequeno texto explicativo sobre o critério
+    st.caption(f"Critério de decisão (Threshold): {THRESHOLD*100}% para sinalizar Alta.")
