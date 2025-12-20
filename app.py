@@ -252,6 +252,14 @@ y = dados['target']
 for col in features_saved:
     if col not in X.columns:
         X[col] = np.nan
+
+X["periodo"] = (
+    X["periodo"]
+    .cat.add_categories("desconhecido")
+    .fillna("desconhecido")
+)
+
+
 X = X[features_saved]
 
 # ==============================
