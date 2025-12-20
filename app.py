@@ -256,20 +256,6 @@ st.metric("📊 Registros", len(X))
 # ==============================
 # Sidebar
 # ==============================
-
-st.sidebar.subheader("📅 Filtro de Datas (Visualização)")
-
-data_min = dados.index.min().date()
-data_max = dados.index.max().date()
-
-data_inicio, data_fim = st.sidebar.date_input(
-    "Período",
-    value=(data_min, data_max),
-    min_value=data_min,
-    max_value=data_max
-)
-
-
 st.sidebar.header("⚙️ Painel de Controle")
 janela_grafico = st.sidebar.slider(
     "Janela de análise (pregões)", 20, 300, 50, 10
@@ -279,23 +265,15 @@ mostrar_targets = st.sidebar.checkbox(
 )
 
 # ==============================
-# Preparar dados do gráfico (VISUALIZAÇÃO)
+# Preparar dados do gráfico
 # ==============================
 st.subheader("📊 Tendência do IBOV")
 
-dados_vis = (
-    dados
-    .loc[(dados.index.date >= data_inicio) & (dados.index.date <= data_fim)]
-    .drop(columns=["periodo"], errors="ignore")
-    .copy()
-)
+dados['MA_20'] = dados['close'].rolling(20).mean()
+dados['MA_50'] = dados['close'].rolling(50).mean()
 
-# Médias móveis (calculadas APÓS o filtro)
-dados_vis['MA_20'] = dados_vis['close'].rolling(20).mean()
-dados_vis['MA_50'] = dados_vis['close'].rolling(50).mean()
-
-# Target apenas para visualização (sem vazamento)
-dados_vis['target_plot'] = dados_vis['target'].shift(1)
+dados_plot = dados.tail(janela_grafico)
+dados_plot['target_plot'] = dados_plot['target'].shift(1)
 
 # ==============================
 # Criar gráfico
@@ -303,26 +281,26 @@ dados_vis['target_plot'] = dados_vis['target'].shift(1)
 fig = go.Figure()
 
 fig.add_trace(go.Scatter(
-    x=dados_vis.index,
-    y=dados_vis['close'],
+    x=dados_plot.index,
+    y=dados_plot['close'],
     name='Fechamento'
 ))
 
 fig.add_trace(go.Scatter(
-    x=dados_vis.index,
-    y=dados_vis['MA_20'],
+    x=dados_plot.index,
+    y=dados_plot['MA_20'],
     name='MA 20'
 ))
 
 fig.add_trace(go.Scatter(
-    x=dados_vis.index,
-    y=dados_vis['MA_50'],
+    x=dados_plot.index,
+    y=dados_plot['MA_50'],
     name='MA 50'
 ))
 
-# Mostrar targets reais (apenas visual)
+# Mostrar targets de alta
 if mostrar_targets:
-    alvos = dados_vis[dados_vis['target_plot'] == 1]
+    alvos = dados_plot[dados_plot['target_plot'] == 1]
 
     fig.add_trace(go.Scatter(
         x=alvos.index,
