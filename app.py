@@ -252,7 +252,7 @@ y = dados['target']
 for col in features_saved:
     if col not in X.columns:
         if col !="periodo":
-        X[col] = np.nan
+            X[col] = np.nan
 
 X["periodo"] = (
     X["periodo"]
