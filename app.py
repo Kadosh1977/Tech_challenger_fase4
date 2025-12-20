@@ -27,7 +27,7 @@ TEST_SIZE = 30
 # ==============================
 model = joblib.load("modelo_final_catboost.joblib")
 scaler = joblib.load("scaler_dados_ibovespa.joblib")
-features_saved = joblib.load("colunas_treinamento.joblib")#.columns.tolist()
+features_saved = joblib.load("colunas_treinamento.joblib").columns.tolist()
 
 # ==============================
 # Funções auxiliares 
