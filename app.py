@@ -248,18 +248,8 @@ dados = dados.dropna()
 X = dados.drop(columns=['close', 'high', 'low', 'target'])
 y = dados['target']
 
-# Garantir mesmas colunas do treino
-for col in features_saved:
-    if col not in X.columns:
-        if col !="periodo":
-            X[col] = np.nan
-
-X["periodo"] = (
-    X["periodo"]
-    .cat.add_categories("desconhecido")
-    .fillna("desconhecido")
-)
-
+# Garantir mesmas colunas e mesma ordem do treino (FORMA CORRETA)
+X = X.reindex(columns=features_saved)
 
 X = X[features_saved]
 
