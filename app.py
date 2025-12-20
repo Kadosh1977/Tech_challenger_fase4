@@ -9,21 +9,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import plotly.graph_objects as go
 import os
 
-
-
 # ==============================
 # Configuração Streamlit
 # ==============================
-if "executou_predicao" not in st.session_state:
-    st.session_state.executou_predicao = False
-
-if "X_test" not in st.session_state:
-    st.session_state.X_test = None
-
-if "y_test" not in st.session_state:
-    st.session_state.y_test = None
-
-
 st.set_page_config(page_title="Previsão IBOVESPA (CatBoost)", layout="centered")
 st.title("📈 Tendência IBOVESPA - CatBoost")
 
@@ -36,7 +24,7 @@ TEST_SIZE = 30
 # ==============================
 model = joblib.load("modelo_final_catboost.joblib")
 scaler = joblib.load("scaler_dados_ibovespa.joblib")
-features_saved = joblib.load("colunas_treinamento.joblib") #.columns.tolist()
+features_saved = joblib.load("colunas_treinamento.joblib").columns.tolist()
 
 # ==============================
 # Funções auxiliares 
@@ -248,9 +236,10 @@ dados = dados.dropna()
 X = dados.drop(columns=['close', 'high', 'low', 'target'])
 y = dados['target']
 
-# Garantir mesmas colunas e mesma ordem do treino (FORMA CORRETA)
-X = X.reindex(columns=features_saved)
-
+# Garantir mesmas colunas do treino
+for col in features_saved:
+    if col not in X.columns:
+        X[col] = np.nan
 X = X[features_saved]
 
 # ==============================
@@ -401,11 +390,9 @@ with st.expander("ℹ️ Como interpretar este gráfico"):
 # ==============================
 # Predição
 # ==============================
-st.subheader("🧠 Predição")
 if st.button("📊 Realizar Predição"):
-    st.session_state.executou_predicao = True	
-    st.session_state.X_test = X.iloc[-TEST_SIZE:]
-    st.session_state.y_test = y.iloc[-TEST_SIZE:]
+    X_test = X.iloc[-TEST_SIZE:]
+    y_test = y.iloc[-TEST_SIZE:]
 
     cat_features = X_test.select_dtypes(include=['object', 'category']).columns.tolist()
     pool_test = Pool(X_test, cat_features=cat_features)
@@ -424,25 +411,11 @@ if st.button("📊 Realizar Predição"):
     c3.metric("Recall", f"{rec:.3f}")
     c4.metric("F1", f"{f1:.3f}")
 
-    # Predição (Trecho Corrigido)
-# ==============================
-if st.session_state.executou_predicao and st.session_state.X_test is not None:
-    X_test = st.session_state.X_test
-    st.subheader("🔮 Tendência para o próximo Pregão")
-    cat_features = X_test.select_dtypes(include=['object', 'category']).columns.tolist()
+    st.subheader("🔮 Próximo Pregão")
+    next_proba = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
 
-    
-# Obtém a probabilidade da classe 1 (ALTA)
-    next_proba_alta = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
-
-    if next_proba_alta >= THRESHOLD:
-    # Se acima do threshold, exibe a probabilidade de ALTA
-        st.success(f"ALTA ({next_proba_alta*100:.2f}%) 📈")
+    if next_proba >= THRESHOLD:
+        st.success(f"ALTA ({next_proba*100:.2f}%) 📈")
     else:
-    # Se abaixo do threshold, calculamos a probabilidade de QUEDA/ESTÁVEL
-    # que é o complemento (100% - Probabilidade de Alta)
-        proba_queda = (1 - next_proba_alta) * 100
-        st.error(f"QUEDA/ESTÁVEL ({proba_queda:.2f}%) 📉")
+        st.error(f"QUEDA/ESTÁVEL ({next_proba*100:.2f}%) 📉")
 
-# Dica visual: Adicionar um pequeno texto explicativo sobre o critério
-    st.caption(f"Critério de decisão (Threshold): {THRESHOLD*100}% para sinalizar Alta.")
