@@ -50,13 +50,13 @@ st.sidebar.markdown(
 
 st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data)")
 
-# Caption discreto para o aviso técnico (não precisa ser justificado)
+# Caption discreto para o aviso técnico
 st.sidebar.caption(
    """O modelo utiliza a estrutura padrão do Investing.com.
    Certifique-se de não alterar nomes ou a ordem das colunas no CSV."""
 )
 
-st.sidebar.write("") # Respiro visual
+st.sidebar.write("") 
 
 uploaded_file = st.sidebar.file_uploader(
     "Faça o upload do arquivo csv abaixo",
@@ -276,14 +276,12 @@ dados = dados.dropna()
 
 # ==============================
 # X e y finais
+# ==============================
 
-# ==============================
-# X e y finais
-# ==============================
 X = dados.drop(columns=['close', 'high', 'low', 'target'])
 y = dados['target']
 
-# 1. Converta as colunas salvas em uma LISTA simples (isso evita o erro .where())
+# 1. Converta as colunas salvas em uma LISTA simples para carregamento no streamlit
 if hasattr(features_saved, 'columns'):
     features_list = features_saved.columns.tolist()
 else:
@@ -295,7 +293,7 @@ for col in features_list:
         X[col] = np.nan
 
 # 3. Reordena as colunas usando a lista simples
-# IMPORTANTE: Usamos .copy() para desvincular qualquer índice problemático
+# IMPORTANTE: Usamos .copy() para desvincular qualquer índice problemático, corrigindo o carregamento no streamlit
 X = X[features_list].copy()
 # ==============================
 # Dashboard
@@ -367,12 +365,18 @@ st.divider()
 # ==============================
 # Sidebar
 # ==============================
+# Calcula o máximo disponível na base atual
+max_disponivel = len(dados)
+
 st.sidebar.header("⚙️ Painel de Controle")
+
+# O slider agora se adapta ao tamanho da base carregada
 janela_grafico = st.sidebar.slider(
-    "Janela de análise (pregões)", 20, 300, 50, 10
-)
-mostrar_targets = st.sidebar.checkbox(
-    "Mostrar últimos targets reais", value=True
+    "Janela de análise (pregões)", 
+    min_value=20, 
+    max_value=min(max_disponivel, 300), # Nunca ultrapassa 300, nem o tamanho da base
+    value=min(max_disponivel, 50),      # Valor padrão seguro
+    step=10
 )
 
 # ==============================
