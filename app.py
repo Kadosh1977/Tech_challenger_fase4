@@ -48,7 +48,7 @@ st.sidebar.markdown(
 )
 
 
-st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data" target="_blank")
+st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data" target="_blank")")
 
 # Caption discreto para o aviso técnico
 st.sidebar.caption(
