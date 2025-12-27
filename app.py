@@ -40,11 +40,12 @@ st.sidebar.markdown(
         O aplicativo é inicialmente carregado com dados de backtest.
         Para realizar uma nova análise, envie um arquivo CSV exportado diretamente do
         <strong>Investing.com</strong>, contendo no mínimo seis meses de histórico.
-        ⚠️ **Atenção:** Não altere o nome ou a ordem das colunas do arquivo baixado. 
-        <br><br></div>
+       <br><br></div>
         👉 <a href="https://www.investing.com/indices/bovespa-historical-data" target="_blank">
         Investing.com: dados históricos.
         </a>
+     <div style="text-align: justify;">
+     ⚠️ **Atenção:** Não altere o nome ou a ordem das colunas do arquivo baixado.</div>
         <br></br>
     """,
     unsafe_allow_html=True
