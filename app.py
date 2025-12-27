@@ -48,7 +48,10 @@ st.sidebar.markdown(
 )
 
 
-st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data" target="_blank")")
+st.sidebar.markdown(
+    '👉 <a href="https://www.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
+    unsafe_allow_html=True
+)
 
 # Caption discreto para o aviso técnico
 st.sidebar.caption(
