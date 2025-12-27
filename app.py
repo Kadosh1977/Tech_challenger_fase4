@@ -29,51 +29,21 @@ st.caption("Predição e análise técnica com Catboost")
 # ==============================
 # Upload de dados do usuário
 # ==============================
-st.sidebar.markdown(
-    "<h3 style='text-align: center;'>📥 Entrada de Dados</h3>",
-    unsafe_allow_html=True
-)
+with st.sidebar:
+    st.markdown("<h3 style='text-align: center;'>📥 Entrada de Dados</h3>", unsafe_allow_html=True)
+    
+    # Texto principal mais direto
+    st.write("Envie um arquivo CSV do **Investing.com** (mínimo 6 meses) para atualizar a análise.")
+    
+    # Link direto
+    st.link_button("🔗 Obter dados históricos", "https://www.investing.com/indices/bovespa-historical-data")
+    
+    # O Caption que você sugeriu, focado no alerta técnico
+    st.caption("⚠️ **Nota técnica:** O modelo exige a estrutura original do CSV. Não renomeie ou remova colunas.")
 
-st.sidebar.markdown(
-    """
-    <div style="text-align: justify;">
-        O aplicativo é inicialmente carregado com dados de backtest.
-        Para realizar uma nova análise, envie um arquivo CSV exportado diretamente do
-        <strong>Investing.com</strong>, contendo no mínimo seis meses de histórico.
-       <br><br></div>
-        👉 <a href="https://www.investing.com/indices/bovespa-historical-data" target="_blank">
-        Investing.com: dados históricos.
-        </a>
-    """,
-    unsafe_allow_html=True
-)
-st.sidebar.caption(
-    "O modelo utiliza a estrutura padrão do Investing.com. "
-    "Certifique-se de não alterar nomes ou a ordem das colunas no arquivo CSV."
-)
-
-st.markdown(
-    """
-    <style>
-    div[data-testid="stFileUploader"] {
-        text-align: center;
-    }
-    div[data-testid="stFileUploader"] section {
-        margin-left: auto;
-        margin-right: auto;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-
-uploaded_file = st.sidebar.file_uploader(
-    "Faça o upload do arquivo csv abaixo",
-    type=["csv"]
-)
-
+    st.divider() # Linha sutil para separar do upload
+    
+    uploaded_file = st.file_uploader("Selecione o arquivo CSV", type=["csv"])
 
 
 CSV_FILE = "base_de_dados.csv"
