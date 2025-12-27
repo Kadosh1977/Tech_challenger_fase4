@@ -52,8 +52,8 @@ st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investi
 
 # Caption discreto para o aviso técnico (não precisa ser justificado)
 st.sidebar.caption(
-    "O modelo utiliza a estrutura padrão do Investing.com.
-    Certifique-se de não alterar nomes ou a ordem das colunas no CSV."
+   """O modelo utiliza a estrutura padrão do Investing.com.
+   Certifique-se de não alterar nomes ou a ordem das colunas no CSV."""
 )
 
 st.sidebar.write("") # Respiro visual
