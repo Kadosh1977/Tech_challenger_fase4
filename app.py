@@ -38,7 +38,7 @@ st.sidebar.markdown(
 st.sidebar.markdown(
     """
     <div style="text-align: justify">
-        O aplicativo é inicialmente carregado com dados de backtest.<br><br>
+        O aplicativo é inicialmente carregado com dados de backtest.
         Para realizar uma nova análise (ex: 12 meses), envie um
         arquivo CSV exportado do <strong>Investing.com</strong>, contendo
         no mínimo 18 meses de histórico.
@@ -46,7 +46,6 @@ st.sidebar.markdown(
     """, 
     unsafe_allow_html=True
 )
-
 
 st.sidebar.markdown(
     '👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
