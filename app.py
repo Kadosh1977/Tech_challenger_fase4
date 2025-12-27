@@ -49,7 +49,7 @@ st.sidebar.markdown(
 
 
 st.sidebar.markdown(
-    '👉 <a href="https://www.br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
+    '👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
     unsafe_allow_html=True
 )
 
