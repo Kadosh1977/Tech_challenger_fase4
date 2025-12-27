@@ -287,29 +287,26 @@ dados = dados.dropna()
 # ==============================
 # X e y finais
 
+# ==============================
+# X e y finais
+# ==============================
 X = dados.drop(columns=['close', 'high', 'low', 'target'])
 y = dados['target']
 
-# 1. Garantir que features_saved seja uma lista simples de nomes de colunas
+# 1. Converta as colunas salvas em uma LISTA simples (isso evita o erro .where())
 if hasattr(features_saved, 'columns'):
     features_list = features_saved.columns.tolist()
-elif hasattr(features_saved, 'tolist'):
-    features_list = features_saved.tolist()
 else:
     features_list = list(features_saved)
 
-# 2. Criar colunas faltantes antes de reordenar
-# Isso evita que o Pandas tente adivinhar tipos durante o reindex
+# 2. Garante que todas as colunas necessárias existam
 for col in features_list:
     if col not in X.columns:
-        if col == 'periodo':
-            # Cria a coluna categórica vazia com as categorias corretas
-            X[col] = pd.Series([np.nan] * len(X), dtype='category')
-        else:
-            X[col] = np.nan
+        X[col] = np.nan
 
-# 3. Reordenar usando a lista (isso evita o acionamento do .where() problemático)
-X = X[features_list]
+# 3. Reordena as colunas usando a lista simples
+# IMPORTANTE: Usamos .copy() para desvincular qualquer índice problemático
+X = X[features_list].copy()
 # ==============================
 # Dashboard
 # ==============================
