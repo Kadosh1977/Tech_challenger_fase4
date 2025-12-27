@@ -368,18 +368,24 @@ st.divider()
 # ==============================
 # Sidebar
 # ==============================
-# Calcula o máximo disponível na base atual
-max_disponivel = len(dados)
 
 st.sidebar.header("⚙️ Painel de Controle")
 
-# O slider agora se adapta ao tamanho da base carregada
+# 1. Calculamos o limite com base nos dados já carregados
+max_disponivel = len(dados) if 'dados' in locals() else 300
+
+# 2. Slider Dinâmico
 janela_grafico = st.sidebar.slider(
     "Janela de análise (pregões)", 
     min_value=20, 
-    max_value=min(max_disponivel, 300), # Nunca ultrapassa 300, nem o tamanho da base
-    value=min(max_disponivel, 50),      # Valor padrão seguro
+    max_value=max(21, min(max_disponivel, 300)), # Garante min > 20
+    value=min(max_disponivel, 50) if max_disponivel > 50 else max_disponivel,
     step=10
+)
+
+# 3. O Checkbox que estava faltando e causou o erro
+mostrar_targets = st.sidebar.checkbox(
+    "Mostrar últimos targets reais", value=True
 )
 
 # ==============================
