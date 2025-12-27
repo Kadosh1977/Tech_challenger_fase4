@@ -122,8 +122,28 @@ dados = dados.rename(columns={
 dados['target'] = (dados['var_pct'].shift(-1) > 0).astype(int)
 
 # Escalonamento (IGUAL AO JUPYTER)
-dados['volume'] = np.log1p(dados['volume'])
-dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
+#dados['volume'] = np.log1p(dados['volume'])
+#dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
+# Se o usuário subir um arquivo, aplicamos o ajuste de regime para 2025
+if uploaded_file is not None:
+    # 1. Log normal
+    dados['volume'] = np.log1p(dados['volume'])
+    
+    # 2. Z-Score Local (Ajuste para o 'Novo Normal' da Bolsa)
+    # Isso faz o volume de bilhões parecer 'normal' para o Catboost
+    v_mean = dados['volume'].mean()
+    v_std = dados['volume'].std()
+    dados['volume'] = (dados['volume'] - v_mean) / v_std
+    
+    # 3. Var% continua com o scaler original (pois não mudou de escala)
+    _, dados['var_pct'] = scaler.transform(dados[['volume', 'var_pct']]).T
+
+else:
+    # Se estiver rodando o Backtest padrão, use o código original 100%
+    dados['volume'] = np.log1p(dados['volume'])
+    dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
+
+
 
 # ==============================
 # Engenharia de features
