@@ -29,20 +29,17 @@ st.caption("Predição e análise técnica com Catboost")
 # ==============================
 # Upload de dados do usuário
 # ==============================
-# ==============================
-# Sidebar - Versão Final Organizada
-# ==============================
+
 st.sidebar.markdown(
     "<h3 style='text-align: center;'>📥 Entrada de Dados</h3>",
     unsafe_allow_html=True
 )
 
-# Texto Justificado com ajuste de fonte para não gerar espaços excessivos
 st.sidebar.markdown(
     """
     <div style="text-align: justify; font-size: 14px; line-height: 1.4;">
-        O aplicativo é carregado inicialmente com dados de backtest. 
-        Para uma nova análise, envie um arquivo CSV exportado do 
+        O aplicativo é inicialmente carregado com dados de backtest. 
+        Para realizar uma nova análise, envie um arquivo CSV exportado do 
         <strong>Investing.com</strong>, contendo no mínimo seis meses de histórico.
     </div>
     <br>
@@ -50,13 +47,13 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# Link em destaque
+
 st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data)")
 
 # Caption discreto para o aviso técnico (não precisa ser justificado)
 st.sidebar.caption(
-    "⚠️ O modelo utiliza a estrutura padrão do Investing.com. "
-    "Certifique-se de não alterar nomes ou a ordem das colunas no CSV."
+    "O modelo utiliza a estrutura padrão do Investing.com.
+    Certifique-se de não alterar nomes ou a ordem das colunas no CSV."
 )
 
 st.sidebar.write("") # Respiro visual
