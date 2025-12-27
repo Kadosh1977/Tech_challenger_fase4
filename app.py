@@ -98,9 +98,23 @@ def tratar_coluna_volume(coluna):
 # Carregar e preparar dados
 # ==============================
 if uploaded_file is not None:
-    st.success("✅ Dados carregados com sucesso a partir do arquivo enviado.")
-    dados = pd.read_csv(uploaded_file)
+    # 1. Carrega os novos dados enviados pelo usuário
+    novos_dados = pd.read_csv(uploaded_file)
+    
+    # 2. Carrega a base histórica (necessária para os cálculos de indicadores)
+    base_historica = pd.read_csv(CSV_FILE)
+    
+    # 3. Une as duas bases
+    # Isso garante que o dia 02/01/2025 tenha os dados de 2024 para calcular as médias
+    dados = pd.concat([base_historica, novos_dados])
+    
+    # 4. Tratamento de datas para garantir a ordem e remover dias duplicados
+    dados['Data'] = pd.to_datetime(dados['Data'], format='%d.%m.%Y', errors='coerce')
+    dados = dados.drop_duplicates(subset='Data').sort_values('Data')
+    
+    st.success("✅ Dados carregados e integrados à base histórica com sucesso.")
 else:
+    # Se não houver upload, carrega apenas a base padrão
     dados = pd.read_csv(CSV_FILE)
 
 dados['Data'] = pd.to_datetime(dados['Data'], format='%d.%m.%Y', errors='coerce')
