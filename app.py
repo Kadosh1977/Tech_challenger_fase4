@@ -287,14 +287,29 @@ dados = dados.dropna()
 # ==============================
 # X e y finais
 # ==============================
+# ==============================
+# X e y finais
+# ==============================
 X = dados.drop(columns=['close', 'high', 'low', 'target'])
 y = dados['target']
 
 # Garantir mesmas colunas do treino
-for col in features_saved:
+# Convertemos features_saved para lista caso seja um Index do Pandas
+if hasattr(features_saved, 'columns'):
+    features_list = features_saved.columns.tolist()
+else:
+    features_list = list(features_saved)
+
+for col in features_list:
     if col not in X.columns:
-        X[col] = np.nan
-X = X[features_saved]
+        # Se a coluna for a categórica 'periodo', tratamos diferente
+        if col == 'periodo':
+            X[col] = pd.Series([np.nan] * len(X), dtype='category')
+        else:
+            X[col] = np.nan
+
+# Reordenar as colunas de acordo com o modelo
+X = X[features_list]
 
 # ==============================
 # Dashboard
