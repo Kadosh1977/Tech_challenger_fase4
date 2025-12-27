@@ -29,22 +29,42 @@ st.caption("Predição e análise técnica com Catboost")
 # ==============================
 # Upload de dados do usuário
 # ==============================
-with st.sidebar:
-    st.markdown("<h3 style='text-align: center;'>📥 Entrada de Dados</h3>", unsafe_allow_html=True)
-    
-    # Texto principal mais direto
-    st.write("Envie um arquivo CSV do **Investing.com** (mínimo 6 meses) para atualizar a análise.")
-    
-    # Link direto
-    st.link_button("🔗 Obter dados históricos", "https://www.investing.com/indices/bovespa-historical-data")
-    
-    # O Caption que você sugeriu, focado no alerta técnico
-    st.caption("⚠️ **Nota técnica:** O modelo exige a estrutura original do CSV. Não renomeie ou remova colunas.")
+# ==============================
+# Sidebar - Versão Final Organizada
+# ==============================
+st.sidebar.markdown(
+    "<h3 style='text-align: center;'>📥 Entrada de Dados</h3>",
+    unsafe_allow_html=True
+)
 
-    st.divider() # Linha sutil para separar do upload
-    
-    uploaded_file = st.file_uploader("Selecione o arquivo CSV", type=["csv"])
+# Texto Justificado com ajuste de fonte para não gerar espaços excessivos
+st.sidebar.markdown(
+    """
+    <div style="text-align: justify; font-size: 14px; line-height: 1.4;">
+        O aplicativo é carregado inicialmente com dados de backtest. 
+        Para uma nova análise, envie um arquivo CSV exportado do 
+        <strong>Investing.com</strong>, contendo no mínimo seis meses de histórico.
+    </div>
+    <br>
+    """,
+    unsafe_allow_html=True
+)
 
+# Link em destaque
+st.sidebar.markdown("👉 [Investing.com: dados históricos](https://www.investing.com/indices/bovespa-historical-data)")
+
+# Caption discreto para o aviso técnico (não precisa ser justificado)
+st.sidebar.caption(
+    "⚠️ O modelo utiliza a estrutura padrão do Investing.com. "
+    "Certifique-se de não alterar nomes ou a ordem das colunas no CSV."
+)
+
+st.sidebar.write("") # Respiro visual
+
+uploaded_file = st.sidebar.file_uploader(
+    "Faça o upload do arquivo csv abaixo",
+    type=["csv"]
+)
 
 CSV_FILE = "base_de_dados.csv"
 THRESHOLD = 0.55
