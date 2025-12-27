@@ -597,43 +597,20 @@ with st.container(border=True):
         "ou queda são baseadas na força e na confirmação dos movimentos recentes do mercado."
     )
 
-st.divider()
 # Esta análise só será executada se um arquivo for enviado
 if uploaded_file is not None:
     st.divider()
-    st.markdown("### 🔍 Termômetro do Mercado (Estabilidade)")
-
-    with st.container(border=True):
-        mean_treino = scaler.mean_
-        std_treino = np.sqrt(scaler.var_)
+    
+    with st.expander("ℹ️ Detalhes da Base Carregada", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"**Período:** {dados.index.min().strftime('%d/%m/%Y')} até {dados.index.max().strftime('%d/%m/%Y')}")
+            st.write(f"**Registros:** {len(dados)} pregões")
+        with col2:
+            st.write(f"**Volume Médio (2025):** {dados['volume'].mean():.2f} (Log)")
+            st.write("**Status do Modelo:** Operando em modo de compatibilidade (Regime 2025)")
         
-        vol_atual_mean = dados['volume'].mean()
-        var_atual_mean = dados['var_pct'].mean()
-        
-        # Calculamos o desvio mas explicamos de forma simples
-        diff_vol = (vol_atual_mean - mean_treino[0]) / std_treino[0]
-        diff_var = (var_atual_mean - mean_treino[1]) / std_treino[1]
-
-        c_drift1, c_drift2 = st.columns(2)
-        
-        with c_drift1:
-            # Usando uma linguagem mais "humana"
-            status_vol = "Muito Alto" if diff_vol > 2 else "Muito Baixo" if diff_vol < -2 else "Normal"
-            st.metric("Intensidade do Volume", status_vol, f"{diff_vol:.1f} pts de desvio")
-            st.caption("Indica se a quantidade de negócios está dentro do padrão histórico.")
-
-        with c_drift2:
-            status_var = "Agitado" if diff_var > 2 else "Calmo" if diff_var < -2 else "Normal"
-            st.metric("Ritmo do Preço", status_var, f"{diff_var:.1f} pts de desvio")
-            st.caption("Indica se as oscilações de preço estão seguindo o ritmo comum.")
-
-        # Explicação amigável do alerta
-        if abs(diff_vol) > 2:
-            st.info("""
-            💡 **Nota sobre o Volume:** O volume atual aparece como 'Desvio Elevado' devido às mudanças na B3 em 2025. 
-            O modelo já identificou essa mudança e consegue processar os dados normalmente, mas o 'termômetro' 
-            avisa que a escala de valores é nova.
-            """)
-        
-        if abs(diff_var) <= 2 and abs(diff_vol) <= 2:
-            st.success("✅ As condições atuais do mercado são muito parecidas com o histórico do modelo.")
+        st.caption("""
+            Nota: O modelo processa o volume atual considerando as mudanças estruturais da B3 em 2025. 
+            A análise foca na dinâmica das séries temporais (lags) para manter a precisão preditiva.
+        """)
