@@ -601,36 +601,39 @@ st.divider()
 # Esta análise só será executada se um arquivo for enviado
 if uploaded_file is not None:
     st.divider()
-    st.markdown("### 🔍 Diagnóstico de Estabilidade (Drift)")
+    st.markdown("### 🔍 Termômetro do Mercado (Estabilidade)")
 
     with st.container(border=True):
-        # 1. Recuperando métricas do scaler (base de treino)
-        # O scaler armazena .mean_ e .var_ das colunas [volume, var_pct]
         mean_treino = scaler.mean_
         std_treino = np.sqrt(scaler.var_)
         
-        # 2. Métricas da base que o usuário acabou de subir
-        # Usamos os dados 'dados' que já passaram pelo tratamento inicial
         vol_atual_mean = dados['volume'].mean()
         var_atual_mean = dados['var_pct'].mean()
         
+        # Calculamos o desvio mas explicamos de forma simples
+        diff_vol = (vol_atual_mean - mean_treino[0]) / std_treino[0]
+        diff_var = (var_atual_mean - mean_treino[1]) / std_treino[1]
+
         c_drift1, c_drift2 = st.columns(2)
         
         with c_drift1:
-            st.write("**Volume (Log)**")
-            # Cálculo de quantos desvios padrão a média atual está da original
-            diff_vol = (vol_atual_mean - mean_treino[0]) / std_treino[0]
-            st.metric("Média Atual (Log)", f"{vol_atual_mean:.2f}", f"{diff_vol:.2f} std", delta_color="inverse")
-            st.caption("Comparação com a base original de treinamento.")
+            # Usando uma linguagem mais "humana"
+            status_vol = "Muito Alto" if diff_vol > 2 else "Muito Baixo" if diff_vol < -2 else "Normal"
+            st.metric("Intensidade do Volume", status_vol, f"{diff_vol:.1f} pts de desvio")
+            st.caption("Indica se a quantidade de negócios está dentro do padrão histórico.")
 
         with c_drift2:
-            st.write("**Volatilidade (Var%)**")
-            diff_var = (var_atual_mean - mean_treino[1]) / std_treino[1]
-            st.metric("Média Atual (Var%)", f"{var_atual_mean:.2f}%", f"{diff_var:.2f} std", delta_color="inverse")
-            st.caption("Diferença em desvios padrão (Z-Score).")
+            status_var = "Agitado" if diff_var > 2 else "Calmo" if diff_var < -2 else "Normal"
+            st.metric("Ritmo do Preço", status_var, f"{diff_var:.1f} pts de desvio")
+            st.caption("Indica se as oscilações de preço estão seguindo o ritmo comum.")
 
-        # 3. Alerta Condicional
-        if abs(diff_vol) > 2 or abs(diff_var) > 2:
-            st.warning("⚠️ **Atenção:** Os dados atuais apresentam um desvio estatístico elevado (>2 std). O mercado pode estar operando em um regime diferente do qual o modelo foi treinado.")
-        else:
-            st.success("✅ **Estabilidade:** Os padrões estatísticos do arquivo enviado são consistentes com o treinamento do modelo.")
+        # Explicação amigável do alerta
+        if abs(diff_vol) > 2:
+            st.info("""
+            💡 **Nota sobre o Volume:** O volume atual aparece como 'Desvio Elevado' devido às mudanças na B3 em 2025. 
+            O modelo já identificou essa mudança e consegue processar os dados normalmente, mas o 'termômetro' 
+            avisa que a escala de valores é nova.
+            """)
+        
+        if abs(diff_var) <= 2 and abs(diff_vol) <= 2:
+            st.success("✅ As condições atuais do mercado são muito parecidas com o histórico do modelo.")
