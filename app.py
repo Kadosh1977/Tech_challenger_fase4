@@ -596,36 +596,39 @@ with st.container(border=True):
     )
 
 st.divider()
-st.markdown("### 🔍 Diagnóstico de Estabilidade (Drift)")
+# Esta análise só será executada se um arquivo for enviado
+if uploaded_file is not None:
+    st.divider()
+    st.markdown("### 🔍 Diagnóstico de Estabilidade (Drift)")
 
-with st.container(border=True):
-    # Recuperando as médias originais do seu scaler
-    # Assumindo que o scaler foi treinado com [volume, var_pct]
-    mean_treino = scaler.mean_
-    std_treino = np.sqrt(scaler.var_)
-    
-    # Calculando as métricas dos dados atuais (antes do escalonamento)
-    # Precisamos dos dados originais ou reverter o log do volume para comparar
-    vol_atual_mean = dados['volume'].mean()
-    var_atual_mean = dados['var_pct'].mean()
-    
-    c_drift1, c_drift2 = st.columns(2)
-    
-    with c_drift1:
-        st.write("**Volume (Log)**")
-        diff_vol = (vol_atual_mean - mean_treino[0]) / std_treino[0]
-        st.metric("Desvio de Volume", f"{vol_atual_mean:.2f}", f"{diff_vol:.2f} std", delta_color="inverse")
-        st.caption("Comparação entre a média atual e a média histórica do treinamento.")
+    with st.container(border=True):
+        # 1. Recuperando métricas do scaler (base de treino)
+        # O scaler armazena .mean_ e .var_ das colunas [volume, var_pct]
+        mean_treino = scaler.mean_
+        std_treino = np.sqrt(scaler.var_)
+        
+        # 2. Métricas da base que o usuário acabou de subir
+        # Usamos os dados 'dados' que já passaram pelo tratamento inicial
+        vol_atual_mean = dados['volume'].mean()
+        var_atual_mean = dados['var_pct'].mean()
+        
+        c_drift1, c_drift2 = st.columns(2)
+        
+        with c_drift1:
+            st.write("**Volume (Log)**")
+            # Cálculo de quantos desvios padrão a média atual está da original
+            diff_vol = (vol_atual_mean - mean_treino[0]) / std_treino[0]
+            st.metric("Média Atual (Log)", f"{vol_atual_mean:.2f}", f"{diff_vol:.2f} std", delta_color="inverse")
+            st.caption("Comparação com a base original de treinamento.")
 
-    with c_drift2:
-        st.write("**Volatilidade (Var%)**")
-        diff_var = (var_atual_mean - mean_treino[1]) / std_treino[1]
-        st.metric("Desvio de Retorno", f"{var_atual_mean:.2f}%", f"{diff_var:.2f} std", delta_color="inverse")
-        st.caption("Diferença em desvios padrão em relação à base original.")
+        with c_drift2:
+            st.write("**Volatilidade (Var%)**")
+            diff_var = (var_atual_mean - mean_treino[1]) / std_treino[1]
+            st.metric("Média Atual (Var%)", f"{var_atual_mean:.2f}%", f"{diff_var:.2f} std", delta_color="inverse")
+            st.caption("Diferença em desvios padrão (Z-Score).")
 
-    # Alerta de confiabilidade
-    if abs(diff_vol) > 2 or abs(diff_var) > 2:
-        st.warning("⚠️ **Atenção:** Os dados atuais estão muito distantes da base de treinamento (>2 desvios). A precisão do modelo pode ser afetada por uma mudança de regime no mercado.")
-    else:
-        st.success("✅ **Estabilidade:** Os dados atuais seguem padrões estatísticos semelhantes aos do treinamento.")
-
+        # 3. Alerta Condicional
+        if abs(diff_vol) > 2 or abs(diff_var) > 2:
+            st.warning("⚠️ **Atenção:** Os dados atuais apresentam um desvio estatístico elevado (>2 std). O mercado pode estar operando em um regime diferente do qual o modelo foi treinado.")
+        else:
+            st.success("✅ **Estabilidade:** Os padrões estatísticos do arquivo enviado são consistentes com o treinamento do modelo.")
