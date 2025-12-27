@@ -44,11 +44,12 @@ st.sidebar.markdown(
         👉 <a href="https://www.investing.com/indices/bovespa-historical-data" target="_blank">
         Investing.com: dados históricos.
         </a>
-     <div style="text-align: justify;">
-     ⚠️ **Atenção:** Não altere o nome ou a ordem das colunas do arquivo baixado.</div>
-        <br></br>
     """,
     unsafe_allow_html=True
+)
+st.sidebar.caption(
+    "O modelo utiliza a estrutura padrão do Investing.com. "
+    "Certifique-se de não alterar nomes ou a ordem das colunas no arquivo CSV."
 )
 
 st.markdown(
