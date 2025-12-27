@@ -37,7 +37,7 @@ st.sidebar.markdown(
 
 st.sidebar.markdown(
     """
-    <div>
+    <div style="text-align: justify; font-size: 12px>
         O aplicativo é inicialmente carregado com dados de backtest.
         Para realizar uma nova análise (ex: 12 meses), envie um
         arquivo CSV exportado do <strong>Investing.com</strong>, contendo
