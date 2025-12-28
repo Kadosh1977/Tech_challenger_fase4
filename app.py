@@ -447,6 +447,21 @@ mostrar_targets = st.sidebar.checkbox(
     "Mostrar últimos targets reais", value=True
 )
 
+st.sidebar.divider()
+st.sidebar.subheader("📝 Log de Uso")
+
+if os.path.exists("logs_uso.json"):
+    with open("logs_uso.json", "r", encoding="utf-8") as f:
+        st.sidebar.download_button(
+            label="📥 Download do log (JSON)",
+            data=f,
+            file_name="logs_uso.json",
+            mime="application/json"
+        )
+else:
+    st.sidebar.caption("Nenhum log gerado nesta sessão.")
+
+
 # ==============================
 # Preparar dados do gráfico
 # ==============================
