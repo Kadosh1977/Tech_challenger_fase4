@@ -38,10 +38,10 @@ st.sidebar.markdown(
 st.sidebar.markdown(
     """
     <div style="font-size: 13px">
-        O aplicativo é inicialmente carregado com dados de backtest.<br></br>
-        Para realizar uma nova análise (ex: 12 meses), envie um
-        arquivo CSV exportado do <strong>Investing.com</strong>, contendo
-        no mínimo 18 meses de histórico.
+    O aplicativo é inicialmente carregado com dados de backtest.
+    Para realizar uma nova análise (por exemplo, previsão para 12 meses), 
+    envie um arquivo CSV exportado do Investing.com, 
+    contendo no mínimo 18 meses de histórico.
     </div>
     """, 
     unsafe_allow_html=True
@@ -308,7 +308,10 @@ with st.container(border=True):
 
     with c1:
         ultimo_pregao = dados.index.max()
+        pregao_inicial = dados.index.min()
+        st.metric("📅 Pregão Inicial", pregao_inicial.strftime("%d/%m/%Y"))
         st.metric("📅 Último Pregão", ultimo_pregao.strftime("%d/%m/%Y"))
+        
 
     with c2:
         total_registros = len(dados)
@@ -597,20 +600,4 @@ with st.container(border=True):
         "ou queda são baseadas na força e na confirmação dos movimentos recentes do mercado."
     )
 
-# Esta análise só será executada se um arquivo for enviado
-if uploaded_file is not None:
-    st.divider()
-    
-    with st.expander("ℹ️ Detalhes da Base Carregada", expanded=False):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write(f"**Período:** {dados.index.min().strftime('%d/%m/%Y')} até {dados.index.max().strftime('%d/%m/%Y')}")
-            st.write(f"**Registros:** {len(dados)} pregões")
-        with col2:
-            st.write(f"**Volume Médio (2025):** {dados['volume'].mean():.2f} (Log)")
-            st.write("**Status do Modelo:** Operando em modo de compatibilidade (Regime 2025)")
-        
-        st.caption("""
-            Nota: O modelo processa o volume atual considerando as mudanças estruturais da B3 em 2025. 
-            A análise foca na dinâmica das séries temporais (lags) para manter a precisão preditiva.
-        """)
+
