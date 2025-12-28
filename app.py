@@ -425,14 +425,14 @@ mostrar_targets = st.sidebar.checkbox(
 
 st.sidebar.divider()
 #DOWNLOAD LOGS
-st.sidebar.subheader("📝 Log de Uso")
+st.sidebar.caption("📝 Log de Uso")
 
 if uploaded_file is not None: 
     
     json_string = preparar_log_download(dados, uploaded_file.name)
     
     st.sidebar.download_button(
-        label="📥 Download do log (JSON)",
+        label="📥 Download (.json)",
         data=json_string,
         file_name=f"log_analise_{uploaded_file.name}.json",
         mime="application/json"
