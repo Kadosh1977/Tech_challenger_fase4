@@ -424,8 +424,6 @@ mostrar_targets = st.sidebar.checkbox(
 )
 
 st.sidebar.divider()
-st.sidebar.subheader("📝 Log de Uso")
-
 #DOWNLOAD LOGS
 st.sidebar.subheader("📝 Log de Uso")
 
