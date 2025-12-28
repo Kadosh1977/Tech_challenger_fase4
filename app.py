@@ -88,6 +88,8 @@ features_saved = joblib.load("colunas_treinamento.joblib")#.columns.tolist()
 # ==============================
 # Funções auxiliares
 # ==============================
+
+#tratar volume
 def tratar_coluna_volume(coluna):
     coluna = coluna.astype(str).copy()
     mult = {'k': 1_000, 'M': 1_000_000, 'B': 1_000_000_000}
@@ -101,31 +103,25 @@ def tratar_coluna_volume(coluna):
         )
     return pd.to_numeric(coluna, errors='coerce')
 
+#Logs
 LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "uso_app.json")
 
-
 def salvar_log_uso(info: dict):
     os.makedirs(LOG_DIR, exist_ok=True)
-
-    # Carrega logs existentes
+    
+    logs = []
     if os.path.exists(LOG_FILE):
         try:
             with open(LOG_FILE, "r", encoding="utf-8") as f:
                 logs = json.load(f)
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, IOError):
             logs = []
-    else:
-        logs = []
 
-    # Adiciona novo registro
     logs.append(info)
 
-    # Salva novamente
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(logs, f, indent=4, ensure_ascii=False)
-
-
 
 # ==============================
 # Carregar e preparar dados
@@ -314,20 +310,13 @@ dados = dados.dropna()
 
 #Salva o log do usuário
 if uploaded_file is not None:
+    # Lógica de criação do dicionário 'log'
     log = {
         "log_id": str(uuid.uuid4()),
         "timestamp": datetime.utcnow().isoformat(),
-        "fonte_dados": "Investing.com",
         "arquivo": uploaded_file.name,
-        "periodo_utilizado": {
-            "inicio": dados.index.min().strftime("%Y-%m-%d"),
-            "fim": dados.index.max().strftime("%Y-%m-%d")
-        },
-        "total_registros": int(len(dados)),
-        "horizonte_previsao_meses": 12,
-        "modelo": "CatBoostClassifier"
+        # ... outros campos ...
     }
-
     salvar_log_uso(log)
 
 # ==============================
@@ -430,10 +419,10 @@ st.divider()
 
 st.sidebar.header("⚙️ Painel de Controle")
 
-# 1. Calculamos o limite com base nos dados já carregados
+#Calculamos o limite com base nos dados já carregados
 max_disponivel = len(dados) if 'dados' in locals() else 300
 
-# 2. Slider Dinâmico
+#Slider Dinâmico
 janela_grafico = st.sidebar.slider(
     "Janela de análise (pregões)", 
     min_value=20, 
@@ -442,7 +431,7 @@ janela_grafico = st.sidebar.slider(
     step=10
 )
 
-# 3. O Checkbox que estava faltando e causou o erro
+#Checkbox 
 mostrar_targets = st.sidebar.checkbox(
     "Mostrar últimos targets reais", value=True
 )
@@ -450,16 +439,23 @@ mostrar_targets = st.sidebar.checkbox(
 st.sidebar.divider()
 st.sidebar.subheader("📝 Log de Uso")
 
-if os.path.exists("logs_uso.json"):
-    with open("logs_uso.json", "r", encoding="utf-8") as f:
-        st.sidebar.download_button(
-            label="📥 Download do log (JSON)",
-            data=f,
-            file_name="logs_uso.json",
-            mime="application/json"
-        )
+#DOWNLOAD LOGS
+if os.path.exists(LOG_FILE):
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        conteudo_log = f.read() # Lê o conteúdo como string/bytes
+        
+    st.sidebar.download_button(
+        label="📥 Download do log (JSON)",
+        data=conteudo_log,
+        file_name="logs_uso.json",
+        mime="application/json"
+    )
 else:
-    st.sidebar.caption("Nenhum log gerado nesta sessão.")
+    # Estilo st.caption para alinhar com sua preferência visual anterior
+    st.sidebar.markdown(
+        "<div style='font-size: 0.85rem; color: #6e7781;'>Nenhum log gerado nesta sessão.</div>", 
+        unsafe_allow_html=True
+    )
 
 
 # ==============================
@@ -537,8 +533,6 @@ with st.container(border=True):
         "As médias móveis suavizam as oscilações diárias para revelar a direção do mercado."
 " O cruzamento entre as linhas de curto e longo prazo indica mudança na força deste movimento."
     )
-
-
 
 # --- Janela usada no gráfico ---
 dados_prob = dados.tail(janela_grafico).copy()
