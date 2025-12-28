@@ -23,7 +23,7 @@ import os
 # Configuração Streamlit
 # ==============================
 st.set_page_config(page_title="Previsão IBOVESPA", layout="centered")
-st.title("📈 Análise de Tendência do IBOVESPA")
+st.title("📈 Análise de Tendência do IBOVESPA", laytou="centered")
 st.caption("Predição e análise técnica com Catboost")
 
 # ==============================
@@ -316,6 +316,7 @@ with st.container(border=True):
     with c2:
         total_registros = len(dados)
         st.metric("📊 Total de Registros", f"{total_registros:,}".replace(",", "."), help="Dados históricos acumulados")
+        
 
     with c3:
         st.metric("📈 Ativo", "IBOVESPA", "Índice Bovespa")
