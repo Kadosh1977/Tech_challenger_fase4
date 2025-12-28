@@ -319,7 +319,9 @@ with st.container(border=True):
 
     with c3:
         st.metric("📈 Ativo", "IBOVESPA", "Índice Bovespa")
-    st.caption("🌐 Fonte: Investing.com | Status: Base de dados validada")
+    st.caption("""Observação: O período exibido considera apenas os 
+    dados efetivamente utilizados pelo modelo após a etapa de engenharia de features. 
+    Por isso, o pregão inicial pode ser posterior à primeira data presente no arquivo original.""")
 
 # ==============================
 # Predição
