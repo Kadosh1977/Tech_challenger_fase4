@@ -44,7 +44,7 @@ st.sidebar.markdown(
 st.sidebar.markdown(
     """
     <div style="font-size: 13px">
-    O aplicativo é inicialmente carregado com dados de backtest.
+    O aplicativo é inicialmente carregado com dados de backtest.<br></br>
     Para realizar uma nova análise (por exemplo, previsão
     para um horizonte de 12 meses), envie um arquivo CSV
     exportado do Investing.com, contendo no mínimo 18 meses de histórico.
