@@ -23,7 +23,7 @@ import os
 # Configuração Streamlit
 # ==============================
 st.set_page_config(page_title="Previsão IBOVESPA", layout="centered")
-st.title("📈 Análise de Tendência do IBOVESPA", laytou="centered")
+st.title("📈 Análise de Tendência do IBOVESPA", layout="centered")
 st.caption("Predição e análise técnica com Catboost")
 
 # ==============================
