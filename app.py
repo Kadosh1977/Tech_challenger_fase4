@@ -17,6 +17,8 @@ from catboost import Pool
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import plotly.graph_objects as go
 import plotly.express as px
+import json
+import uuid
 import os
 
 # ==============================
@@ -98,6 +100,31 @@ def tratar_coluna_volume(coluna):
         )
     return pd.to_numeric(coluna, errors='coerce')
 
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, "uso_app.json")
+
+
+def salvar_log_uso(info: dict):
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    # Carrega logs existentes
+    if os.path.exists(LOG_FILE):
+        try:
+            with open(LOG_FILE, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+        except json.JSONDecodeError:
+            logs = []
+    else:
+        logs = []
+
+    # Adiciona novo registro
+    logs.append(info)
+
+    # Salva novamente
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=4, ensure_ascii=False)
+
+
 
 # ==============================
 # Carregar e preparar dados
@@ -106,6 +133,7 @@ def tratar_coluna_volume(coluna):
 if uploaded_file is not None:
     st.success("✅ Dados carregados com sucesso a partir do arquivo enviado.")
     dados = pd.read_csv(uploaded_file)
+    
 else:
     dados = pd.read_csv(CSV_FILE)
 
@@ -127,11 +155,9 @@ dados = dados.rename(columns={
 # Target
 dados['target'] = (dados['var_pct'].shift(-1) > 0).astype(int)
 
-# Escalonamento (IGUAL AO JUPYTER)
+# Escalonamento 
 dados['volume'] = np.log1p(dados['volume'])
 dados[['volume', 'var_pct']] = scaler.transform(dados[['volume', 'var_pct']])
-# Se o usuário subir um arquivo, aplicamos o ajuste de regime para 2025
-
 
 # ==============================
 # Engenharia de features
@@ -284,6 +310,24 @@ dados['periodo'] = dados['periodo'].astype(
 
 # Limpeza
 dados = dados.dropna()
+
+#Salva o log do usuário
+if uploaded_file is not None:
+    log = {
+        "log_id": str(uuid.uuid4()),
+        "timestamp": datetime.utcnow().isoformat(),
+        "fonte_dados": "Investing.com",
+        "arquivo": uploaded_file.name,
+        "periodo_utilizado": {
+            "inicio": dados.index.min().strftime("%Y-%m-%d"),
+            "fim": dados.index.max().strftime("%Y-%m-%d")
+        },
+        "total_registros": int(len(dados)),
+        "horizonte_previsao_meses": 12,
+        "modelo": "CatBoostClassifier"
+    }
+
+    salvar_log_uso(log)
 
 # ==============================
 # X e y finais
