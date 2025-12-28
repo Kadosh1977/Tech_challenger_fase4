@@ -425,7 +425,7 @@ mostrar_targets = st.sidebar.checkbox(
 
 st.sidebar.divider()
 #DOWNLOAD LOGS
-st.sidebar.caption("📝 Log de Uso")
+st.sidebar.markdown("📝 Log de Uso")
 
 if uploaded_file is not None: 
     
