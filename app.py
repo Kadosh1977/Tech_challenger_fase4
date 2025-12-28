@@ -103,25 +103,23 @@ def tratar_coluna_volume(coluna):
         )
     return pd.to_numeric(coluna, errors='coerce')
 
-#Logs
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "uso_app.json")
 
-def salvar_log_uso(info: dict):
-    os.makedirs(LOG_DIR, exist_ok=True)
+#Gerar log par ao usuário
+def preparar_log_download(dados_df, nome_arquivo):
+    log_id = str(uuid.uuid4())
+    timestamp = datetime.utcnow().isoformat()
     
-    logs = []
-    if os.path.exists(LOG_FILE):
-        try:
-            with open(LOG_FILE, "r", encoding="utf-8") as f:
-                logs = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            logs = []
-
-    logs.append(info)
-
-    with open(LOG_FILE, "w", encoding="utf-8") as f:
-        json.dump(logs, f, indent=4, ensure_ascii=False)
+    # Criamos a estrutura do log em um dicionário
+    conteudo = [{
+        "log_id": log_id,
+        "sessao_apresentacao": timestamp,
+        "evento": "Analise de Dados Externos",
+        "arquivo_enviado": nome_arquivo,
+        "total_registros": len(dados_df),
+        "modelo_ativo": "CatBoostClassifier"
+    }]
+    # Transforma em string JSON formatada
+    return json.dumps(conteudo, indent=4, ensure_ascii=False)
 
 # ==============================
 # Carregar e preparar dados
@@ -308,17 +306,6 @@ dados['periodo'] = dados['periodo'].astype(
 # Limpeza
 dados = dados.dropna()
 
-#Salva o log do usuário
-if uploaded_file is not None:
-    # Lógica de criação do dicionário 'log'
-    log = {
-        "log_id": str(uuid.uuid4()),
-        "timestamp": datetime.utcnow().isoformat(),
-        "arquivo": uploaded_file.name,
-        # ... outros campos ...
-    }
-    salvar_log_uso(log)
-
 # ==============================
 # X e y finais
 # ==============================
@@ -440,22 +427,21 @@ st.sidebar.divider()
 st.sidebar.subheader("📝 Log de Uso")
 
 #DOWNLOAD LOGS
-if os.path.exists(LOG_FILE):
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        conteudo_log = f.read() # Lê o conteúdo como string/bytes
-        
+st.sidebar.subheader("📝 Log de Uso")
+
+if uploaded_file is not None: 
+    
+    json_string = preparar_log_download(dados, uploaded_file.name)
+    
     st.sidebar.download_button(
         label="📥 Download do log (JSON)",
-        data=conteudo_log,
-        file_name="logs_uso.json",
+        data=json_string,
+        file_name=f"log_analise_{uploaded_file.name}.json",
         mime="application/json"
     )
 else:
-    # Estilo st.caption para alinhar com sua preferência visual anterior
-    st.sidebar.markdown(
-        "<div style='font-size: 0.85rem; color: #6e7781;'>Nenhum log gerado nesta sessão.</div>", 
-        unsafe_allow_html=True
-    )
+    # Quando estiver no backtest inicial ou o usuário excluir o arquivo:
+    st.sidebar.caption("Aguardando upload para gerar logs.")
 
 
 # ==============================
