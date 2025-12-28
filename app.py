@@ -23,12 +23,10 @@ import os
 # Configuração Streamlit
 # ==============================
 st.set_page_config(page_title="Previsão IBOVESPA", layout="centered")
-#st.title("📈 Análise de Tendência do IBOVESPA", layout="centered")
 st.markdown(
     "<h2 style='text-align: center;'>📈 Análise de Tendência do IBOVESPA</h2>",
     unsafe_allow_html=True
 )
-#st.caption("Predição e análise técnica com Catboost")
 st.markdown(
     "<p style='opacity: 0.85; font-size: 0.95rem;'>Predição e análise técnica com <strong>CatBoost</strong></p>",
     unsafe_allow_html=True
@@ -47,9 +45,9 @@ st.sidebar.markdown(
     """
     <div style="font-size: 13px">
     O aplicativo é inicialmente carregado com dados de backtest.
-    Para realizar uma nova análise (por exemplo, previsão para 12 meses), 
-    envie um arquivo CSV exportado do Investing.com, 
-    contendo no mínimo 18 meses de histórico.
+    Para realizar uma nova análise (por exemplo, previsão
+    para um horizonte de 12 meses), envie um arquivo CSV
+    exportado do Investing.com, contendo no mínimo 18 meses de histórico.
     </div>
     """, 
     unsafe_allow_html=True
