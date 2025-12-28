@@ -28,8 +28,11 @@ st.markdown(
     "<h2 style='text-align: center;'>📈 Análise de Tendência do IBOVESPA</h2>",
     unsafe_allow_html=True
 )
-
-st.caption("Predição e análise técnica com Catboost")
+#st.caption("Predição e análise técnica com Catboost")
+st.markdown(
+    "<p style='opacity: 0.85; font-size: 0.95rem;'>Predição e análise técnica com <strong>CatBoost</strong></p>",
+    unsafe_allow_html=True
+)
 
 # ==============================
 # Upload de dados do usuário
