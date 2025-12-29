@@ -304,7 +304,7 @@ dados['periodo'] = dados['periodo'].astype(
 # Limpeza
 dados = dados.dropna()
 
-if dados.empty:
+if dados.empty or len(dados) < 100:
     st.warning(
         """⚠️ A base enviada não possui dados históricos suficientes. O modelo utiliza
         engenharia de features baseado em janelas temporais(lags), o que exige uma série
