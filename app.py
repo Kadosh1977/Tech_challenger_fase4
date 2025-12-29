@@ -305,10 +305,10 @@ dados = dados.dropna()
 
 if dados.empty:
     st.warning(
-        "⚠️ A base enviada não possui dados históricos suficientes."
-        """O modelo utiliza engenharia de features 
-        baseado em janelas temporais(lags), o que exige uma série histórica mais longa. Considere enviar uma nova
-        base, com **no mínimo 18 meses de dados históricos**."""
+        """⚠️ A base enviada não possui dados históricos suficientes. O modelo utiliza
+        engenharia de features baseado em janelas temporais(lags), o que exige uma série
+        histórica mais longa. Considere enviar uma nova base, com **no mínimo 18 meses de
+        dados históricos**."""
     )
     st.stop()
 
