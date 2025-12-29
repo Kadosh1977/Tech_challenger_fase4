@@ -142,7 +142,7 @@ periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
 periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
-if periodo_meses < 17:
+if periodo_meses < 17.5:
     st.warning(
         """⚠️ A base enviada não possui dados históricos suficientes. 
         O modelo utiliza engenharia de features baseada em janelas temporais, 
@@ -362,7 +362,7 @@ with st.container(border=True):
         
 
     with c3:
-        st.metric("📈 Ativo", "Índice Bovespa")
+        st.metric("📈 Ativo", "IBOVESPA", "Índice Bovespa")
     st.caption("""Observação: O período exibido considera apenas os 
     dados efetivamente utilizados pelo modelo após a etapa de engenharia de features. 
     Por isso, o pregão inicial pode ser posterior à primeira data presente no arquivo original.""")
