@@ -61,13 +61,13 @@ st.sidebar.write("")
 # Caption discreto para o aviso técnico
 st.sidebar.caption(
    """O modelo utiliza a estrutura padrão do Investing.com.
-   Certifique-se de não alterar nomes ou a ordem das colunas no CSV."""
+   Certifique-se de não alterar nomes ou a ordem das colunas no arquivo."""
 )
 
 st.sidebar.write("") 
 
 uploaded_file = st.sidebar.file_uploader(
-    "Faça o upload do arquivo csv abaixo",
+    "Faça o upload do arquivo exportado abaixo",
     type=["csv"]
 )
 
