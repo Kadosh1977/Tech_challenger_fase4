@@ -50,7 +50,7 @@ st.sidebar.markdown(
     O aplicativo é inicialmente carregado com dados históricos de backtest.<br<<br/>
     Para novas análises, o modelo requer uma série histórica com o mínimo <strong>18 meses</strong>, 
     pois utiliza engenharia de features baseada em janelas temporais.<br></br>
-    Acesse a página do Investing.com para exportar a base dados.<br></br>
+    Acesse a página do Investing.com para exportar uma nova base de dados.<br></br>
     👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>
       
     </div>
@@ -67,7 +67,8 @@ st.sidebar.caption(
 st.sidebar.write("") 
 
 uploaded_file = st.sidebar.file_uploader(
-    "Faça o upload do arquivo exportado abaixo",
+    "st.sidebar.markdown("**Envie o arquivo CSV abaixo (arraste ou selecione do seu computador)**")
+",
     type=["csv"]
 )
 
