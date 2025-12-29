@@ -146,10 +146,9 @@ if periodo_meses < 18:
         "❌ A base enviada não possui histórico suficiente para análise. "
         "O modelo requer uma série histórica mínima de 18 meses devido ao uso de janelas temporais."
     )
-    st.stop()
-else: continue
+    
+else: dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
 
-dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
 dados['Vol.'] = tratar_coluna_volume(dados['Vol.'])
 
 dados = dados.rename(columns={
