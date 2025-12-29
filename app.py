@@ -48,7 +48,7 @@ st.sidebar.markdown(
     """
     <div style="font-size: 14px">
     O aplicativo é inicialmente carregado com dados históricos de backtest (20 anos).<br><br>
-    Para novas análises, recomendamos o envio de bases de dados com no mínimo <strong>18 meses</strong>, 
+    Para novas análises, recomendamos o envio de bases de dados com no mínimo <strong>12 meses</strong>, 
     pois o modelo aplica engenharia de features com janelas temporais.<br><br>
     Acesse a página do Investing.com para exportar um nova base de dados no formato .csv.<br><br>
 
@@ -304,11 +304,11 @@ dados['periodo'] = dados['periodo'].astype(
 # Limpeza
 dados = dados.dropna()
 
-if dados.empty or len(dados) < 100:
+if dados.empty or len(dados) < 140:
     st.warning(
         """⚠️ A base enviada não possui dados históricos suficientes. O modelo utiliza
         engenharia de features baseado em janelas temporais(lags), o que exige uma série
-        histórica mais longa. Considere enviar uma nova base, com **no mínimo 18 meses de
+        histórica mais longa. Considere enviar uma nova base, com **no mínimo 12 meses de
         dados históricos**."""
     )
     st.stop()
