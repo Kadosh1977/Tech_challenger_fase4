@@ -595,7 +595,7 @@ with st.container(border=True):
             'xanchor': 'center',
             'yanchor': 'top'
         },
-        height=600,
+        height=550,
         xaxis_title="Data",
         yaxis=dict(title="Pontos (pts)"),
         yaxis2=dict(
@@ -643,7 +643,7 @@ with st.container(border=True):
             'yanchor': 'top'
         },
         margin=dict(t=80, b=40, l=20, r=20),
-        height=600,
+        height=550,
         yaxis=dict(autorange="reversed"),
         xaxis_title="Peso no Modelo (%)",
         template="plotly_dark"
