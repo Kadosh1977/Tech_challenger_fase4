@@ -138,17 +138,17 @@ dados['Data'] = pd.to_datetime(dados['Data'], format='%d.%m.%Y', errors='coerce'
 dados = dados.dropna(subset=['Data']).set_index('Data').sort_index()
 
 #trava de carregamento para base insuficiente
-periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
+#periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
-periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
+#periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
-if periodo_meses < 17.5:
-    st.warning(
-        """⚠️ A base enviada não possui dados históricos suficientes. 
-        O modelo utiliza engenharia de features baseada em janelas temporais, 
-        o que pode resultar em perda significativa de dados ou falha na análise. 
-        Considere enviar uma série histórica mais longa."""
-    )
+#if periodo_meses < 17.5:
+    #st.warning(
+        #"""⚠️ A base enviada não possui dados históricos suficientes. 
+        #O modelo utiliza engenharia de features baseada em janelas temporais, 
+        #o que pode resultar em perda significativa de dados ou falha na análise. 
+        #Considere enviar uma série histórica mais longa."""
+    #)
 
 
 dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
@@ -321,6 +321,14 @@ dados['periodo'] = dados['periodo'].astype(
 
 # Limpeza
 dados = dados.dropna()
+
+if dados.empty:
+    st.warning(
+        "⚠️ A base enviada não possui dados históricos suficientes após a etapa de engenharia de features. "
+        "O modelo utiliza janelas temporais, o que exige uma série histórica mais longa."
+    )
+    st.stop()
+
 
 # ==============================
 # X e y finais
