@@ -46,8 +46,8 @@ st.sidebar.markdown(
 
 st.sidebar.markdown(
     """
-    <div style="font-size: 13px">
-    O aplicativo é inicialmente carregado com dados históricos de backtest.
+    <div style="font-size: 14px">
+    O aplicativo é inicialmente carregado com dados históricos de backtest.<br<<br/>
     Para novas análises, o modelo requer uma série histórica com o mínimo <strong>18 meses</strong>, 
     pois utiliza engenharia de features baseada em janelas temporais.<br></br>
     Acesse a página do Investing.com para exportar a base dados.<br></br>
@@ -57,7 +57,7 @@ st.sidebar.markdown(
     """, 
     unsafe_allow_html=True
 )
-
+st.sidebar.write("") 
 # Caption discreto para o aviso técnico
 st.sidebar.caption(
    """O modelo utiliza a estrutura padrão do Investing.com.
