@@ -301,9 +301,10 @@ dados['periodo'] = dados['periodo'].astype(
     )
 )
 
-# Limpeza
+# Limpeza após a engenharia de features
 dados = dados.dropna()
 
+#Aviso ao usuário quanto a base mínima para análise do modelo
 if dados.empty or len(dados) < 140:
     st.warning(
         """⚠️ A base enviada não possui dados históricos suficientes. O modelo utiliza
@@ -369,7 +370,7 @@ with col_botao:
     # O botão agora é o único elemento fixo nesta largura
     executar = st.button("🤖 Executar modelo", use_container_width=True, type="primary")
 
-# 2. Lógica que executa ao clicar (agora fora do 'with col_botao')
+#Lógica que executa ao clicar no botão
 if executar:
     with st.spinner("Analisando..."):
         # Seus cálculos (Mantidos conforme solicitado)
@@ -386,7 +387,7 @@ if executar:
         rec = recall_score(y_test, pred)
         f1 = f1_score(y_test, pred)
 
-    # 3. Container de Performance (Agora com largura total padronizada)
+    #Container de Performance do modelo
     with st.container(border=True):
         st.markdown("##### 🎯 Performance do Modelo")
 
@@ -396,7 +397,7 @@ if executar:
         c6.metric("Recall", f"{rec:.3f}")
         c7.metric("F1", f"{f1:.3f}")
 
-    # 4. Resultado da Predição
+    #Resultado da Predição
     st.markdown("### 🔮 Próximo Pregão")
     next_proba = model.predict_proba(Pool(X.iloc[[-1]], cat_features=cat_features))[0, 1]
 
@@ -432,7 +433,8 @@ mostrar_targets = st.sidebar.checkbox(
 )
 
 st.sidebar.divider()
-#DOWNLOAD LOGS
+
+#Download de logs do usuário
 st.sidebar.markdown("📝 Log de Uso")
 
 if uploaded_file is not None: 
@@ -453,6 +455,8 @@ else:
 # ==============================
 # Preparar dados do gráfico
 # ==============================
+
+#GRÁFICO DE MÉDIAS MÓVEIS
 dados['MA_20'] = dados['close'].rolling(20).mean()
 dados['MA_50'] = dados['close'].rolling(50).mean()
 
@@ -507,7 +511,7 @@ with st.container(border=True):
         'xanchor': 'center',
         'yanchor': 'top'
         },
-        height=500,
+        height=600,
         xaxis_title="Data",
         yaxis_title="Pontos (pts)",
         legend=dict(
@@ -526,6 +530,7 @@ with st.container(border=True):
 " O cruzamento entre as linhas de curto e longo prazo indica mudança na força deste movimento."
     )
 
+#GRÁFICO DE PROBABILIDADE
 # --- Janela usada no gráfico ---
 dados_prob = dados.tail(janela_grafico).copy()
 
@@ -590,7 +595,7 @@ with st.container(border=True):
             'xanchor': 'center',
             'yanchor': 'top'
         },
-        height=500,
+        height=600,
         xaxis_title="Data",
         yaxis=dict(title="Pontos (pts)"),
         yaxis2=dict(
@@ -611,14 +616,12 @@ with st.container(border=True):
  "indica que este movimento pode estar perdendo fôlego"
     )
 
-# Importância das Features
+# GRÁFICO DE IMPORTÂNCIA DAS FEATURES
 importances = model.get_feature_importance()
 df_importance = pd.DataFrame({
     "Variável": X.columns,
     "Importância": importances
 }).sort_values(by="Importância", ascending=False)
-
-#Gráfico de barras
 
 with st.container(border=True):
     # Criar o gráfico de barras horizontais
@@ -640,7 +643,7 @@ with st.container(border=True):
             'yanchor': 'top'
         },
         margin=dict(t=80, b=40, l=20, r=20),
-        height=500,
+        height=600,
         yaxis=dict(autorange="reversed"),
         xaxis_title="Peso no Modelo (%)",
         template="plotly_dark"
