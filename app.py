@@ -66,10 +66,13 @@ st.sidebar.caption(
 
 st.sidebar.write("") 
 
+st.sidebar.markdown("**Envie o arquivo CSV abaixo (arraste ou selecione do seu computador)**")
+
 uploaded_file = st.sidebar.file_uploader(
-    "st.sidebar.markdown("**Envie o arquivo CSV abaixo (arraste ou selecione do seu computador)**"),
+    label="",
     type=["csv"]
 )
+
 
 CSV_FILE = "base_de_dados.csv"
 THRESHOLD = 0.55
