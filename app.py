@@ -67,8 +67,7 @@ st.sidebar.caption(
 st.sidebar.write("") 
 
 uploaded_file = st.sidebar.file_uploader(
-    "st.sidebar.markdown("**Envie o arquivo CSV abaixo (arraste ou selecione do seu computador)**")
-",
+    "st.sidebar.markdown("**Envie o arquivo CSV abaixo (arraste ou selecione do seu computador)**"),
     type=["csv"]
 )
 
