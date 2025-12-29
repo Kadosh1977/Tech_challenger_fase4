@@ -52,8 +52,7 @@ st.sidebar.markdown(
     pois utiliza engenharia de features baseada em janelas temporais.<br></br>
     Acesse a página do Investing.com para exportar a base dados.<br></br>
     👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>
-    Bases muito curtas não fornecem informações suficientes para a geração de previsões.<br></br>
-    
+      
     </div>
     """, 
     unsafe_allow_html=True
@@ -141,14 +140,18 @@ dados = dados.dropna(subset=['Data']).set_index('Data').sort_index()
 #trava de carregamento para base insuficiente
 periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
-if periodo_meses < 18:
-    st.error(
-        "❌ A base enviada não possui histórico suficiente para análise. "
-        "O modelo requer uma série histórica mínima de 18 meses devido ao uso de janelas temporais."
-    )
-    
-else: dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
+periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
 
+if periodo_meses < 15:
+    st.warning(
+        """⚠️ A base enviada não possui dados históricos suficientes. 
+        O modelo utiliza engenharia de features baseada em janelas temporais, 
+        o que pode resultar em perda significativa de dados ou falha na análise. 
+        Considere enviar uma série histórica mais longa."""
+    )
+
+
+dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
 dados['Vol.'] = tratar_coluna_volume(dados['Vol.'])
 
 dados = dados.rename(columns={
