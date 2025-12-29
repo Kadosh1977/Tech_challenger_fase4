@@ -47,19 +47,22 @@ st.sidebar.markdown(
 st.sidebar.markdown(
     """
     <div style="font-size: 13px">
-    O aplicativo é inicialmente carregado com dados de backtest.<br></br>
-    Para realizar uma nova análise (por exemplo, previsão
-    para um horizonte de 12 meses), envie um arquivo CSV
-    exportado do Investing.com, contendo no mínimo 18 meses de histórico.
+    O aplicativo é inicialmente carregado com dados históricos de backtest.
+    Para novas análises, o modelo requer uma série histórica com o mínimo <strong>18 meses</strong>, 
+    pois utiliza engenharia de features baseada em janelas temporais.<br></br>
+    Acesse a página do Investing.com para exportar a base dados.<br></br>
+    👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>
+    Bases muito curtas não fornecem informações suficientes para a geração de previsões.<br></br>
+    
     </div>
     """, 
     unsafe_allow_html=True
 )
-st.sidebar.write("") 
-st.sidebar.markdown(
-    '👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
-    unsafe_allow_html=True
-)
+#st.sidebar.write("") 
+#st.sidebar.markdown(
+    #'👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>', 
+    #unsafe_allow_html=True
+#)
 
 # Caption discreto para o aviso técnico
 st.sidebar.caption(
