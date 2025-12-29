@@ -138,6 +138,17 @@ else:
 dados['Data'] = pd.to_datetime(dados['Data'], format='%d.%m.%Y', errors='coerce')
 dados = dados.dropna(subset=['Data']).set_index('Data').sort_index()
 
+#trava de carregamento para base insuficiente
+periodo_meses = (dados.index.max() - dados.index.min()).days / 30.44
+
+if periodo_meses < 18:
+    st.error(
+        "❌ A base enviada não possui histórico suficiente para análise. "
+        "O modelo requer uma série histórica mínima de 18 meses devido ao uso de janelas temporais."
+    )
+    st.stop()
+
+
 dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
 dados['Vol.'] = tratar_coluna_volume(dados['Vol.'])
 
