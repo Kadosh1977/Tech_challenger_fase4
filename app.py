@@ -147,7 +147,7 @@ if periodo_meses < 18:
         "O modelo requer uma série histórica mínima de 18 meses devido ao uso de janelas temporais."
     )
     st.stop()
-
+else: continue
 
 dados['Var%'] = dados['Var%'].astype(str).str.replace(',', '.').str.replace('%', '').astype(float)
 dados['Vol.'] = tratar_coluna_volume(dados['Vol.'])
