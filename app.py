@@ -47,10 +47,11 @@ st.sidebar.markdown(
 st.sidebar.markdown(
     """
     <div style="font-size: 14px">
-    O aplicativo é inicialmente carregado com dados históricos de backtest.<br<<br/>
-    Para novas análises, o modelo requer uma série histórica com o mínimo <strong>18 meses</strong>, 
-    pois utiliza engenharia de features baseada em janelas temporais.<br></br>
-    Acesse a página do Investing.com para exportar uma nova base de dados.<br></br>
+    O aplicativo é inicialmente carregado com dados históricos de backtest (20 anos).<br><br>
+    Para novas análises, recomendamos o envio de bases de dados com no mínimo <strong>18 meses</strong>, 
+    pois o modelo aplica engenharia de features com janelas temporais.<br><br>
+    Acesse a página do Investing.com para exportar um nova base de dados no formato .csv.<br><br>
+
     👉 <a href="https://br.investing.com/indices/bovespa-historical-data" target="_blank">Investing.com: dados históricos</a>
       
     </div>
@@ -67,18 +68,9 @@ st.sidebar.caption(
 st.sidebar.write("") 
 
 uploaded_file = st.sidebar.file_uploader(
-    "Para envio do csv, clique abaixo para selecionar ou arraste o arquivo",
+    "Para envio do csv, clique abaixo para seleciona-lo ou arraste o arquivo",
     type=["csv"]
 )
-
-
-st.sidebar.markdown("****")
-
-uploaded_file = st.sidebar.file_uploader(
-    label="",
-    type=["csv"]
-)
-
 
 CSV_FILE = "base_de_dados.csv"
 THRESHOLD = 0.55
