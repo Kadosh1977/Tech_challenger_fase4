@@ -511,7 +511,7 @@ with st.container(border=True):
         'xanchor': 'center',
         'yanchor': 'top'
         },
-        height=600,
+        height=550,
         xaxis_title="Data",
         yaxis_title="Pontos (pts)",
         legend=dict(
